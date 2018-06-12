@@ -1,0 +1,162 @@
+/*=============================================
+=                  Reset CSS                  =
+=============================================*/
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, main, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline; }
+
+article, aside, details, figcaption, figure,
+footer, header, main, hgroup, menu, nav, section {
+  display: block; }
+
+body {
+  line-height: 1; }
+
+ol, ul {
+  list-style: none; }
+
+blockquote, q {
+  quotes: none; }
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none; }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0; }
+
+input {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none; }
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0; }
+
+input[type="color"]::-webkit-color-swatch {
+  border: none; }
+
+* {
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  outline: none; }
+
+/*=====  End of Reset CSS  ======*/
+
+html {height: 100%;}
+
+body {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    height: 100%;
+    padding: 2em;
+    background-color: #cdae33;
+}
+
+.console {
+    font-family: Lucida Console, sans-serif;
+    display: flex;
+    flex-direction: column;
+    flex: 2;
+    min-width: 500px;
+    background-color: #222;
+    margin: 2em;
+    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.75);
+}
+
+.console__summary {
+   font-size: 14px;
+   flex: 1; 
+   padding: 0.5em;
+   color: #FFF;
+   overflow-y: scroll;
+}
+
+.console__sign {
+    display: flex;
+    position: relative;
+    height: 35px;
+    padding: 3px 10px 3px 30px;
+    background-color: #111;
+    align-content: center;
+    cursor: text;
+}
+
+.console__sign::before {
+    content: ">";
+    display: block;
+    height: 29px;
+    position: absolute;
+    bottom: 3px;
+    left: 10px;
+    color: #FFF;
+    font-weight: bold;
+    font-size: 1.3em;
+    margin-top: -25px;
+}
+
+.console__input {
+    width: 100%;
+    background-color: #111;
+    font-size: 15px;
+    border: 0;
+    outline: 0;
+    color: #FFF;
+}
+
+.view {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-width: 450px;
+    margin: 2em;
+}
+
+.map {
+    display: flex;
+    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.75);
+    flex: 1;
+    margin-bottom: 2em;
+    overflow: scroll;
+}
+
+.map table {
+    width: 100%;
+    height: 100%;
+    background: url("http://kommands.com/images/kommand-board-game-map.gif");
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-position: center;
+    min-width: 450px;
+}
+
+.map td {
+    border: 1px dashed #000;
+    transition: all 0.6s linear;
+}
+
+.help {
+    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.75);
+    flex: 1;
+    overflow-y: scroll;
+    background-color: #CCC;
+}
