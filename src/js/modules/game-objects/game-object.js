@@ -59,36 +59,88 @@ class Enemy extends GameObject {
 }
 
 class Npc extends GameObject {
-	constructor(name, lvl, exp, hp, mana, attack, defence) {
-		super(name, lvl, exp, hp, mana, attack, defence)
+	constructor(configObj) {
+		super(configObj)
 		
 	}
 }
 
 
 class Player extends GameObject {
-	constructor(name, lvl, exp, hp, mana, attack, defence) {
-		super(name, lvl, exp, hp, mana, attack, defence)
+	constructor(configObj) {
+		super(configObj)
 		
-		this.equipment = [new Armor(ItemCollector.armors[0]), new Shoes(ItemCollector.boots[0]), new Weapon(ItemCollector.weapons[0])],
-		this.backpack = [new Armor(ItemCollector.armors[2]), new ElixirHP(), new ElixirHP(), new Food()]
+		this.equipment = [],
+		this.backpack = [],
+
+		this.putOnEq([new Armor(ItemCollector.armors[0]), new Shoes(ItemCollector.boots[0]), new Weapon(ItemCollector.weapons[0])]);
+		this.collectItem([new Armor(ItemCollector.armors[2]), new ElixirHP(), new ElixirHP(), new Food()]);
+	}
+
+	gainExp(valueValue) {
+		this.exp += expValue;
+
+		const lvlPlan = this.ExpSchema.filter(plan => plan.lvl === this.lvl + 1);
+		if(lvlPlan[0].exp >= this.exp) {
+			this.lvlUp();
+		}
 	}
 	
 	lvlUp() {
-		
+		this.lvl += 1;
+		this.updateStats("increase", {hp: 20, mana: 10, attack: 2, defence: 2})
+	}
+
+	updateStats(way, itemChanged) {
+		if (way === "increase") {
+			this.hp += itemChanged.hp;
+			this.mana += itemChanged.mana;
+			this.attack += itemChanged.attack;
+			this.defence += itemChanged.defence;
+		} else if (way === "decrease") {
+			this.hp -= itemChanged.hp;
+			this.mana -= itemChanged.mana;
+			this.attack -= itemChanged.attack;
+			this.defence -= itemChanged.defence;
+		}
+	}
+
+	putOnEq(itemsArr) {
+		if(this.equipment.length >= 3) return;
+
+		itemsArr.forEach( itemToPutOn => {
+			this.equipment.push(itemToPutOn);
+			let indexInBag = this.backpack.findIndex(bagItem => bagItem.name === itemToPutOn.name);
+			if(indexInBag >= 0) {
+				this.backpack.splice(indexInBag, 1);
+			}
+			this.updateStats("increase", itemToPutOn);
+		});
+
+	};
+
+	takeOffEq(itemsArr) {
+		if(this.equipment.length <= 0) return;
+
+		itemsArr.forEach( itemToTakeOff => {
+			this.backpack.push(itemToTakeOff);
+			let indexInEq = this.equipment.findIndex(eqItem => eqItem.name === itemToTakeOff.name);
+			if(indexInEq >= 0) {
+				this.equipment.splice(indexInEq, 1);
+			}
+			this.updateStats("decrease", itemToTakeOff);
+		});
 	}
 	
 	changeEq(itemName) {
-		const foundItem = this.backpack.filter(item => item.name === itemName);
+		const itemToPutOn = this.backpack.filter(item => item.name === itemName);
 		
-		if(foundItem.length > 0) {
-			const typeToChange = foundItem[0].type;
-			const itemToChange = this.equipment.filter(item => item.type === typeToChange)[0];
-			const indexOfItem = this.equipment.indexOf(itemToChange);
+		if(itemToPutOn.length > 0) {
+			const typeToChange = itemToPutOn[0].type;
+			const itemToChange = this.equipment.filter(item => item.type === typeToChange);
 
-			this.equipment[indexOfItem] = foundItem[0];
-			this.backpack.splice(this.backpack.indexOf(foundItem[0]))
-			this.backpack.push(itemToChange);
+			this.takeOffEq(itemToChange);
+			this.putOnEq(itemToPutOn);
 
 			return `zamieniłeś ${itemToChange.name} na ${itemName}`;
 		} else {
@@ -96,9 +148,12 @@ class Player extends GameObject {
 		}
 	}
 
-	
-	collectItem() {
-		
+	collectItem(arrOfItems) {
+		if(arrOfItems.length > 0) {
+			arrOfItems.forEach(item => {
+				this.backpack.push(item);
+			})
+		}
 	}
 
 	showClothes() {
@@ -115,10 +170,8 @@ class Player extends GameObject {
 			if(temporaryBag.indexOf(item.name) > 0) return;
 
 			let itemsCount = this.backpack.filter(i => i.name === item.name).length;
-			temporaryBag += (itemsCount) ? ` ${item.name} x${itemsCount} ` : ` ${item.name} `;
+			temporaryBag += (itemsCount > 1) ? ` ${item.name}x${itemsCount} ` : ` ${item.name} `;
 		});
-
-		
 		return bag += temporaryBag;
 	}
 

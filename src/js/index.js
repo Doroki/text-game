@@ -19,7 +19,7 @@ class Game {
 		this.GameConsole = new Console(document.querySelector("#input"), document.querySelector("#output")),
 			this.GameMap = new Map(scenario, document.querySelector("table")),
 			this.OrderSwitch = new OrderSwitch(this),
-			this.Player = new Player("Ziomek", 1, 0, 100, 50, 10, 10)
+			this.Player = new Player({name: "Ziomek", lvl: 1, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10})
 	}
 
 	// ---- ASYNCHRONICZNA FUNKCJA, WYŚWIETLA POLECNIA W POPRAWNEJ KOLEJNOŚCI
@@ -37,6 +37,20 @@ class Game {
 	action(order) {
 		this.OrderSwitch.actualOrders(order);
 	}
+
+	showPlayerStats() {
+		const statsInfo = `
+		Name:${this.Player.name}
+		LvL:${this.Player.lvl} 
+		Exp:${this.Player.exp}
+		HP:${this.Player.hp}
+		MP:${this.Player.mana}
+		Attack:${this.Player.attack}
+		Deffence:${this.Player.defence}
+		`;
+		
+		this.GameConsole.info(statsInfo);
+	};
 
 	useItem() {}
 

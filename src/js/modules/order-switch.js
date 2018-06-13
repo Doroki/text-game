@@ -51,12 +51,12 @@ class OrderSwitch {
                 // funkcja
                 break;
             case "statystyki":
-                // funkcja
+                this.parent.showPlayerStats();
                 break;
             case (order.toLowerCase().match(/^sprawdź (\s*\b[a-zA-Z]+\b){1,3}/) || "").input: // sprawdź nazwa przedmiotu
                 this.parent.checkItem(order);
                 break;
-            case "pokaż":
+            case "pokaż eq":
                 this.parent.checkEquipment();
                 break;
             case (order.toLowerCase().match(/^załóż (\s*\b[a-zA-Z]+\b){1,3}/) || "").input: // Załóż nazwa przedmiotu

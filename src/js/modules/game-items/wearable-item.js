@@ -10,15 +10,15 @@ class Item {
 
     showStats() {
         return `
---------------------------
-${this.name}
-  (-- ${this.type} --)
-  + ${this.hp} HP
-  + ${this.mana} MP
-  + ${this.attack} Ataku
-  + ${this.defence} Obrony
---------------------------\n
-`;
+            --------------------------
+            ${this.name}
+            (-- ${this.type} --)
+            + ${this.hp} HP
+            + ${this.mana} MP
+            + ${this.attack} Ataku
+            + ${this.defence} Obrony
+            --------------------------\n
+        `;
     }
 }
 

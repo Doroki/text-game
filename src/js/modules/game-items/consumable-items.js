@@ -7,10 +7,10 @@ class ConsumableItem {
 
     showStats() {
         return `
---------------------------
-${this.name} 
-  ${(this.hp != null) ? this.hp +" Odnowienia HP": this.mana +" Odnowienia MANA"}
---------------------------
+            --------------------------
+            ${this.name} 
+            ${(this.hp != null) ? this.hp +" Odnowienia HP": this.mana +" Odnowienia MP"}
+            --------------------------
         `;
     }
 }
@@ -24,7 +24,7 @@ class ElixirHP extends ConsumableItem {
 
 class ElixirMP extends ConsumableItem {
     constructor() {
-        super("Eliksir MANA", null, 100)
+        super("Eliksir MP", null, 100)
     }
 }
 

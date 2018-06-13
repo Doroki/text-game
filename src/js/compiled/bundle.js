@@ -162,10 +162,10 @@ var Enemy = function (_GameObject) {
 var Npc = function (_GameObject2) {
 	_inherits(Npc, _GameObject2);
 
-	function Npc(name, lvl, exp, hp, mana, attack, defence) {
+	function Npc(configObj) {
 		_classCallCheck(this, Npc);
 
-		return _possibleConstructorReturn(this, (Npc.__proto__ || Object.getPrototypeOf(Npc)).call(this, name, lvl, exp, hp, mana, attack, defence));
+		return _possibleConstructorReturn(this, (Npc.__proto__ || Object.getPrototypeOf(Npc)).call(this, configObj));
 	}
 
 	return Npc;
@@ -174,10 +174,10 @@ var Npc = function (_GameObject2) {
 var Player = function (_GameObject3) {
 	_inherits(Player, _GameObject3);
 
-	function Player(name, lvl, exp, hp, mana, attack, defence) {
+	function Player(configObj) {
 		_classCallCheck(this, Player);
 
-		var _this3 = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, name, lvl, exp, hp, mana, attack, defence));
+		var _this3 = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, configObj));
 
 		_this3.equipment = [new _wearableItem.Armor(_itemsConfig2.default.armors[0]), new _wearableItem.Shoes(_itemsConfig2.default.boots[0]), new _wearableItem.Weapon(_itemsConfig2.default.weapons[0])], _this3.backpack = [new _wearableItem.Armor(_itemsConfig2.default.armors[2]), new _consumableItems.ElixirHP(), new _consumableItems.ElixirHP(), new _consumableItems.Food()];
 		return _this3;
@@ -187,22 +187,73 @@ var Player = function (_GameObject3) {
 		key: 'lvlUp',
 		value: function lvlUp() {}
 	}, {
+		key: 'updateStats',
+		value: function updateStats(way) {
+			var _this4 = this;
+
+			if (way = "increase") {
+				this.equipment.forEach(function (item) {
+					// console.log(item)
+					_this4.hp += item.hp;
+					_this4.mana += item.mana;
+					_this4.attack += item.attack;
+					_this4.defence += item.defence;
+				});
+			} else if (way = "decrease") {
+				this.equipment.forEach(function (item) {
+					console.log(_this4);
+					_this4.hp -= item.hp;
+					_this4.mana -= item.mana;
+					_this4.attack -= item.attack;
+					_this4.defence -= item.defence;
+				});
+			}
+		}
+	}, {
+		key: 'putOnEq',
+		value: function putOnEq(itemsArr) {
+			var _this5 = this;
+
+			itemsArr.forEach(function (itemToPutOn) {
+				_this5.equipment.push(itemToPutOn);
+				var indexInBag = _this5.backpack.findIndex(function (bagItem) {
+					return bagItem.name === itemToPutOn.name;
+				});
+				_this5.backpack.splice(indexInBag, 1);
+			});
+
+			this.updateStats("increase");
+		}
+	}, {
+		key: 'takeOffEq',
+		value: function takeOffEq(itemsArr) {
+			var _this6 = this;
+
+			itemsArr.forEach(function (itemToTakeOff) {
+				_this6.backpack.push(itemToTakeOff);
+				var indexInEq = _this6.equipment.findIndex(function (eqItem) {
+					return eqItem.name === itemToTakeOff.name;
+				});
+				_this6.equipment.splice(indexInEq, 1);
+			});
+
+			this.updateStats("decrease");
+		}
+	}, {
 		key: 'changeEq',
 		value: function changeEq(itemName) {
-			var foundItem = this.backpack.filter(function (item) {
+			var itemToPutOn = this.backpack.filter(function (item) {
 				return item.name === itemName;
 			});
 
-			if (foundItem.length > 0) {
-				var typeToChange = foundItem[0].type;
+			if (itemToPutOn.length > 0) {
+				var typeToChange = itemToPutOn[0].type;
 				var itemToChange = this.equipment.filter(function (item) {
 					return item.type === typeToChange;
-				})[0];
-				var indexOfItem = this.equipment.indexOf(itemToChange);
+				});
 
-				this.equipment[indexOfItem] = foundItem[0];
-				this.backpack.splice(this.backpack.indexOf(foundItem[0]));
-				this.backpack.push(itemToChange);
+				this.takeOffEq(itemToChange);
+				this.putOnEq(itemToPutOn);
 
 				return 'zamieni\u0142e\u015B ' + itemToChange.name + ' na ' + itemName;
 			} else {
@@ -224,7 +275,7 @@ var Player = function (_GameObject3) {
 	}, {
 		key: 'showBag',
 		value: function showBag() {
-			var _this4 = this;
+			var _this7 = this;
 
 			var bag = "W plecaku masz: \n\n";
 			var temporaryBag = "";
@@ -232,7 +283,7 @@ var Player = function (_GameObject3) {
 			this.backpack.map(function (item) {
 				if (temporaryBag.indexOf(item.name) > 0) return;
 
-				var itemsCount = _this4.backpack.filter(function (i) {
+				var itemsCount = _this7.backpack.filter(function (i) {
 					return i.name === item.name;
 				}).length;
 				temporaryBag += itemsCount ? ' ' + item.name + ' x' + itemsCount + ' ' : ' ' + item.name + ' ';
@@ -305,7 +356,7 @@ var Game = function () {
 	function Game() {
 		_classCallCheck(this, Game);
 
-		this.GameConsole = new _console2.default(document.querySelector("#input"), document.querySelector("#output")), this.GameMap = new _map.Map(_scenario.scenario, document.querySelector("table")), this.OrderSwitch = new _orderSwitch2.default(this), this.Player = new _gameObject.Player("Ziomek", 1, 0, 100, 50, 10, 10);
+		this.GameConsole = new _console2.default(document.querySelector("#input"), document.querySelector("#output")), this.GameMap = new _map.Map(_scenario.scenario, document.querySelector("table")), this.OrderSwitch = new _orderSwitch2.default(this), this.Player = new _gameObject.Player({ name: "Ziomek", lvl: 1, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10 });
 	}
 
 	// ---- ASYNCHRONICZNA FUNKCJA, WYŚWIETLA POLECNIA W POPRAWNEJ KOLEJNOŚCI
@@ -329,6 +380,13 @@ var Game = function () {
 		key: 'action',
 		value: function action(order) {
 			this.OrderSwitch.actualOrders(order);
+		}
+	}, {
+		key: 'showPlayerStats',
+		value: function showPlayerStats() {
+			var statsInfo = '\n\t\tName:' + this.Player.name + '\n\t\tLvL:' + this.Player.lvl + ' \n\t\tExp:' + this.Player.exp + '\n\t\tHP:' + this.Player.hp + '\n\t\tMP:' + this.Player.mana + '\n\t\tAttack:' + this.Player.attack + '\n\t\tDeffence:' + this.Player.defence + '\n\t\t';
+
+			this.GameConsole.info(statsInfo);
 		}
 	}, {
 		key: 'useItem',
@@ -723,13 +781,13 @@ var OrderSwitch = function () {
                     // funkcja
                     break;
                 case "statystyki":
-                    // funkcja
+                    this.parent.showPlayerStats();
                     break;
                 case (order.toLowerCase().match(/^sprawdź (\s*\b[a-zA-Z]+\b){1,3}/) || "").input:
                     // sprawdź nazwa przedmiotu
                     this.parent.checkItem(order);
                     break;
-                case "pokaż":
+                case "pokaż eq":
                     this.parent.checkEquipment();
                     break;
                 case (order.toLowerCase().match(/^załóż (\s*\b[a-zA-Z]+\b){1,3}/) || "").input:

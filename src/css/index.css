@@ -160,3 +160,7 @@ body {
     overflow-y: scroll;
     background-color: #CCC;
 }
+
+pre {
+  white-space: pre-line;
+}
