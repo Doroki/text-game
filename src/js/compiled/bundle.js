@@ -65,9 +65,212 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-throw new Error("Module build failed: SyntaxError: C:/Users/Draku/Desktop/TextGame/src/js/modules/game-objects/game-object.js: \"eq\" is read-only\n\n\u001b[0m \u001b[90m 89 | \u001b[39m\tshowClothes() {\n \u001b[90m 90 | \u001b[39m\t\t\u001b[36mconst\u001b[39m eq \u001b[33m=\u001b[39m \u001b[32m\"\"\u001b[39m\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 91 | \u001b[39m\t\t\u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mequipment\u001b[33m.\u001b[39mmap(item \u001b[33m=>\u001b[39m eq \u001b[33m+=\u001b[39m item\u001b[33m.\u001b[39mname)\u001b[33m;\u001b[39m\n \u001b[90m    | \u001b[39m\t\t                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 92 | \u001b[39m\t\t\u001b[36mreturn\u001b[39m eq\u001b[33m;\u001b[39m\n \u001b[90m 93 | \u001b[39m\t}\n \u001b[90m 94 | \u001b[39m\u001b[0m\n");
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.Player = exports.Npc = exports.Enemy = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _consumableItems = __webpack_require__(7);
+
+var _wearableItem = __webpack_require__(8);
+
+var _itemsConfig = __webpack_require__(9);
+
+var _itemsConfig2 = _interopRequireDefault(_itemsConfig);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var GameObject = function () {
+	function GameObject(configObj) {
+		_classCallCheck(this, GameObject);
+
+		this.name = configObj.name, this.lvl = configObj.lvl, this.exp = configObj.exp, this.hp = configObj.hp, this.mana = configObj.mana, this.attack = configObj.attack, this.defence = configObj.defence;
+	}
+
+	_createClass(GameObject, [{
+		key: 'attack',
+		value: function attack() {}
+	}]);
+
+	return GameObject;
+}();
+
+var Enemy = function (_GameObject) {
+	_inherits(Enemy, _GameObject);
+
+	function Enemy(configObj) {
+		_classCallCheck(this, Enemy);
+
+		var _this = _possibleConstructorReturn(this, (Enemy.__proto__ || Object.getPrototypeOf(Enemy)).call(this, configObj));
+
+		_this.itemDrop = _this.collectItemDrop();
+		return _this;
+	}
+
+	_createClass(Enemy, [{
+		key: 'collectItemDrop',
+		value: function collectItemDrop() {
+			var itemArary = [];
+
+			for (var i = 0; i < 3; i++) {
+				if (Math.round(Math.random() * 9) > 8) {
+					//10% szansy aby otrzymać ubieralny przedmiot w kazdej iteracji
+					switch (Math.round(Math.random() * 2)) {
+						case 0:
+							itemArary.push(new _wearableItem.Armor(_itemsConfig2.default.getArmor()));
+							break;
+						case 1:
+							itemArary.push(new _wearableItem.Armor(_itemsConfig2.default.getArmor()));
+							break;
+						case 2:
+							itemArary.push(new _wearableItem.Armor(_itemsConfig2.default.getArmor()));
+							break;
+					}
+				}
+
+				if (Math.round(Math.random() * 9) > 6) {
+					//30% szansy aby otrzymać eliksir w kazdej iteracji
+					itemArary.push(Math.round(Math.random()) ? new _consumableItems.ElixirHP() : new _consumableItems.ElixirMP());
+				}
+
+				if (Math.round(Math.random() * 9) > 4) {
+					//50% szansy aby otrzymać jedzenie w każdej iteracji
+					itemArary.push(new _consumableItems.Food());
+				}
+			}
+
+			return itemArary;
+		}
+	}]);
+
+	return Enemy;
+}(GameObject);
+
+var Npc = function (_GameObject2) {
+	_inherits(Npc, _GameObject2);
+
+	function Npc(name, lvl, exp, hp, mana, attack, defence) {
+		_classCallCheck(this, Npc);
+
+		return _possibleConstructorReturn(this, (Npc.__proto__ || Object.getPrototypeOf(Npc)).call(this, name, lvl, exp, hp, mana, attack, defence));
+	}
+
+	return Npc;
+}(GameObject);
+
+var Player = function (_GameObject3) {
+	_inherits(Player, _GameObject3);
+
+	function Player(name, lvl, exp, hp, mana, attack, defence) {
+		_classCallCheck(this, Player);
+
+		var _this3 = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, name, lvl, exp, hp, mana, attack, defence));
+
+		_this3.equipment = [new _wearableItem.Armor(_itemsConfig2.default.armors[0]), new _wearableItem.Shoes(_itemsConfig2.default.boots[0]), new _wearableItem.Weapon(_itemsConfig2.default.weapons[0])], _this3.backpack = [new _wearableItem.Armor(_itemsConfig2.default.armors[2]), new _consumableItems.ElixirHP(), new _consumableItems.ElixirHP(), new _consumableItems.Food()];
+		return _this3;
+	}
+
+	_createClass(Player, [{
+		key: 'lvlUp',
+		value: function lvlUp() {}
+	}, {
+		key: 'changeEq',
+		value: function changeEq(itemName) {
+			var foundItem = this.backpack.filter(function (item) {
+				return item.name === itemName;
+			});
+
+			if (foundItem.length > 0) {
+				var typeToChange = foundItem[0].type;
+				var itemToChange = this.equipment.filter(function (item) {
+					return item.type === typeToChange;
+				})[0];
+				var indexOfItem = this.equipment.indexOf(itemToChange);
+
+				this.equipment[indexOfItem] = foundItem[0];
+				this.backpack.splice(this.backpack.indexOf(foundItem[0]));
+				this.backpack.push(itemToChange);
+
+				return 'zamieni\u0142e\u015B ' + itemToChange.name + ' na ' + itemName;
+			} else {
+				return 'Nie znaleziono takiego przedmiotu w plecaku, upewnij si\u0119 \u017Ce poprawnie wpisa\u0142e\u015B nazw\u0119';
+			}
+		}
+	}, {
+		key: 'collectItem',
+		value: function collectItem() {}
+	}, {
+		key: 'showClothes',
+		value: function showClothes() {
+			var eq = "Masz na sobie: \n\n";
+			this.equipment.map(function (item) {
+				return eq += ' ' + item.type + ': ' + item.name + ' \n';
+			});
+			return eq += "\n";
+		}
+	}, {
+		key: 'showBag',
+		value: function showBag() {
+			var _this4 = this;
+
+			var bag = "W plecaku masz: \n\n";
+			var temporaryBag = "";
+
+			this.backpack.map(function (item) {
+				if (temporaryBag.indexOf(item.name) > 0) return;
+
+				var itemsCount = _this4.backpack.filter(function (i) {
+					return i.name === item.name;
+				}).length;
+				temporaryBag += itemsCount ? ' ' + item.name + ' x' + itemsCount + ' ' : ' ' + item.name + ' ';
+			});
+
+			return bag += temporaryBag;
+		}
+	}, {
+		key: 'clothStats',
+		value: function clothStats(itemName) {
+			var foundInEq = this.equipment.filter(function (item) {
+				return item.name === '< ' + itemName + ' >';
+			});
+			var foundInBag = this.backpack.filter(function (item) {
+				return item.name === '< ' + itemName + ' >';
+			});
+			var foundConsumable = this.backpack.filter(function (item) {
+				return item.name === '[' + itemName + ']';
+			});
+
+			if (foundInEq.length > 0) {
+				return foundInEq[0].showStats();
+			} else if (foundInBag.length > 0) {
+				return foundInBag[0].showStats();
+			} else if (foundConsumable.length > 0) {
+				return foundConsumable[0].showStats();
+			} else {
+				return 'Nie znaleziono takiego przedmiotu, upewnij si\u0119 \u017Ce poprawnie wpisa\u0142e\u015B nazw\u0119';
+			}
+		}
+	}]);
+
+	return Player;
+}(GameObject);
+
+exports.Enemy = Enemy;
+exports.Npc = Npc;
+exports.Player = Player;
 
 /***/ }),
 /* 1 */
@@ -84,9 +287,13 @@ var _console = __webpack_require__(2);
 
 var _console2 = _interopRequireDefault(_console);
 
-var _map = __webpack_require__(4);
+var _orderSwitch = __webpack_require__(4);
 
-var _scenario = __webpack_require__(7);
+var _orderSwitch2 = _interopRequireDefault(_orderSwitch);
+
+var _map = __webpack_require__(5);
+
+var _scenario = __webpack_require__(11);
 
 var _gameObject = __webpack_require__(0);
 
@@ -94,140 +301,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var OrderSwitch = function () {
-	function OrderSwitch(parent) {
-		_classCallCheck(this, OrderSwitch);
-
-		this.parent = parent;
-		this.actualOrders = this.default, this.specialOrders, this.specialAnswers;
-	}
-
-	_createClass(OrderSwitch, [{
-		key: 'addOrders',
-		value: function addOrders(orderPattern) {
-			this.specialOrders = orderPattern;
-		}
-	}, {
-		key: 'addAnswers',
-		value: function addAnswers(answerPattern) {
-			this.specialAnswers = answerPattern;
-		}
-	}, {
-		key: 'change',
-		value: function change(orderSetup) {
-			this.actualOrders = this[orderSetup];
-		}
-	}, {
-		key: 'fight',
-		value: function fight() {
-			switch (order.toLowerCase()) {
-				case "użyj eliksir hp":
-					// funkcja
-					break;
-				case "użyj eliksir mana":
-					// funkcja
-					break;
-				case "statystyki":
-					// funkcja
-					break;
-				case "załóż":
-					// funkcja
-					break;
-				case "zamknij ekwipunek":
-					// funkcja
-					this.change("default");
-					break;
-				default:
-					this.parent.GameConsole.error("Nie ma takiego polecenia");
-					break;
-			}
-		}
-	}, {
-		key: 'equipment',
-		value: function equipment(order) {
-			switch (order.toLowerCase()) {
-				case "użyj eliksir hp":
-					// funkcja
-					break;
-				case "użyj eliksir mana":
-					// funkcja
-					break;
-				case "statystyki":
-					// funkcja
-					break;
-				case "załóż":
-					// funkcja
-					break;
-				case "zamknij ekwipunek":
-					// funkcja
-					this.change("default");
-					break;
-				default:
-					this.parent.GameConsole.error("Nie ma takiego polecenia z poziomu ekwipunku");
-					break;
-			}
-		}
-	}, {
-		key: 'special',
-		value: function special(order) {
-			switch (order.toLowerCase()) {
-				case this.specialOrders[0] || null:
-					this.parent.specialAction(this.specialAnswers[0]);
-					break;
-				case this.specialOrders[1] || null:
-					this.parent.specialAction(this.specialAnswers[1]);
-					this.change("default");
-					break;
-				default:
-					this.parent.GameConsole.error("Nie ma takiego polecenia");
-					break;
-			}
-		}
-	}, {
-		key: 'default',
-		value: function _default(order) {
-			switch (order.toLowerCase()) {
-				case "idź na wschód":
-					this.parent.move(0, 1, "wyruszasz na wschód");
-					break;
-				case "idź na zachód":
-					this.parent.move(0, -1, "wyruszasz na zachód");
-					break;
-				case "idź na północ":
-					this.parent.move(-1, 0, "wyruszasz na północ");
-					break;
-				case "idź na południe":
-					this.parent.move(1, 0, "wyruszasz na południe");
-					break;
-				case "sprawdź":
-					//console.log(String(order.match(/sprawdź/))) regex for switch cases
-					this.parent.checkPlace();
-					break;
-				case "pokaż ekwipunek":
-					this.parent.checkEquipment();
-					break;
-				case "atakuj":
-					// funkcja
-					break;
-				case "pogadaj z":
-					// funkcja
-					break;
-				default:
-					this.parent.GameConsole.error("Nie ma takiego polecenia");
-					break;
-			}
-		}
-	}]);
-
-	return OrderSwitch;
-}();
-
 var Game = function () {
 	function Game() {
 		_classCallCheck(this, Game);
 
-		this.GameConsole = new _console2.default(document.querySelector("#input"), document.querySelector("#output")), this.GameMap = new _map.Map(_scenario.scenario, document.querySelector("table")), this.OrderSwitch = new OrderSwitch(this), this.Player = new _gameObject.Player("Ziomek", 1, 0, 100, 50, 10, 10);
+		this.GameConsole = new _console2.default(document.querySelector("#input"), document.querySelector("#output")), this.GameMap = new _map.Map(_scenario.scenario, document.querySelector("table")), this.OrderSwitch = new _orderSwitch2.default(this), this.Player = new _gameObject.Player("Ziomek", 1, 0, 100, 50, 10, 10);
 	}
+
+	// ---- ASYNCHRONICZNA FUNKCJA, WYŚWIETLA POLECNIA W POPRAWNEJ KOLEJNOŚCI
+
 
 	_createClass(Game, [{
 		key: 'asyncFunc',
@@ -240,6 +322,9 @@ var Game = function () {
 				}, timer);
 			});
 		}
+
+		// ---- FUNKCJA PRZEKAZYWANA DO NASŁUCHIWANIA POLECIEN GRACZA PRZEZ KONCOLE
+
 	}, {
 		key: 'action',
 		value: function action(order) {
@@ -251,9 +336,40 @@ var Game = function () {
 	}, {
 		key: 'talkNPC',
 		value: function talkNPC() {}
+
+		// ---- WYŚWIETLA EKWIPUNEK ORAZ PLECAK GRACZA
+
 	}, {
 		key: 'checkEquipment',
-		value: function checkEquipment() {}
+		value: function checkEquipment() {
+			this.GameConsole.info('Znajdujesz si\u0119 teraz w menu ekwipunek: \n');
+			this.GameConsole.warning("\n--------------------------------------------------");
+			this.GameConsole.info(this.Player.showClothes());
+			this.GameConsole.warning("==================================================");
+			this.GameConsole.info(this.Player.showBag());
+			this.GameConsole.warning("\n--------------------------------------------------");
+		}
+
+		// ---- ZAKLADA WYBRANY EKWIPUNEK ZNAJDUJĄCY SIĘ W PLECAKU
+
+	}, {
+		key: 'wearItem',
+		value: function wearItem(order) {
+			var itemName = '< ' + order.slice(6) + ' >'; // "nazwa przedmiotu zawsze będzie sie zaczynać od indeksu 6, odcinane jest "załóż""
+			var info = this.Player.changeEq(itemName);
+			this.GameConsole.info(info);
+		}
+
+		// ---- POKAZUJE STATYSTYKI WYBRANEGO EKWIPUNKU
+
+	}, {
+		key: 'checkItem',
+		value: function checkItem(order) {
+			console.log(order.slice(8));
+			var itemName = order.slice(8); // "nazwa przedmiotu zawsze będzie sie zaczynać od indeksu 8, odcinane jest "sprawdź""
+			var info = this.Player.clothStats(itemName);
+			this.GameConsole.info(info);
+		}
 
 		// ---- WYPISYWANIE POLECEŃ MIEJSC SPECJALNYCH
 
@@ -330,7 +446,6 @@ var Game = function () {
 		value: function start() {
 			this.presentLocation();
 			this.GameConsole.listenPlayer(this.action.bind(this));
-			this.GameConsole.info(this.Player.showClothes());
 		}
 	}]);
 
@@ -542,6 +657,157 @@ exports.default = ConsoleHistory;
 
 
 Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var OrderSwitch = function () {
+    function OrderSwitch(parent) {
+        _classCallCheck(this, OrderSwitch);
+
+        this.parent = parent;
+        this.actualOrders = this.default, this.specialOrders, this.specialAnswers;
+    }
+
+    _createClass(OrderSwitch, [{
+        key: "addOrders",
+        value: function addOrders(orderPattern) {
+            this.specialOrders = orderPattern;
+        }
+    }, {
+        key: "addAnswers",
+        value: function addAnswers(answerPattern) {
+            this.specialAnswers = answerPattern;
+        }
+    }, {
+        key: "change",
+        value: function change(orderSetup) {
+            this.actualOrders = this[orderSetup];
+        }
+    }, {
+        key: "fight",
+        value: function fight() {
+            switch (order.toLowerCase()) {
+                case "użyj eliksir hp":
+                    // funkcja
+                    break;
+                case "użyj eliksir mana":
+                    // funkcja
+                    break;
+                case "statystyki":
+                    // funkcja
+                    break;
+                case "załóż":
+                    // funkcja
+                    break;
+                case "zamknij ekwipunek":
+                    // funkcja
+                    this.change("default");
+                    break;
+                default:
+                    this.parent.GameConsole.error("Nie ma takiego polecenia");
+                    break;
+            }
+        }
+    }, {
+        key: "equipment",
+        value: function equipment(order) {
+            switch (order.toLowerCase()) {
+                case "użyj eliksir hp":
+                    // funkcja
+                    break;
+                case "użyj eliksir mana":
+                    // funkcja
+                    break;
+                case "statystyki":
+                    // funkcja
+                    break;
+                case (order.toLowerCase().match(/^sprawdź (\s*\b[a-zA-Z]+\b){1,3}/) || "").input:
+                    // sprawdź nazwa przedmiotu
+                    this.parent.checkItem(order);
+                    break;
+                case "pokaż":
+                    this.parent.checkEquipment();
+                    break;
+                case (order.toLowerCase().match(/^załóż (\s*\b[a-zA-Z]+\b){1,3}/) || "").input:
+                    // Załóż nazwa przedmiotu
+                    this.parent.wearItem(order);
+                    break;
+                case "zamknij":
+                    this.parent.GameConsole.info("zamknąłeś ekwipunek");
+                    this.change("default");
+                    break;
+                default:
+                    this.parent.GameConsole.error("Nie ma takiego polecenia z poziomu ekwipunku");
+                    break;
+            }
+        }
+    }, {
+        key: "special",
+        value: function special(order) {
+            switch (order.toLowerCase()) {
+                case this.specialOrders[0] || null:
+                    this.parent.specialAction(this.specialAnswers[0]);
+                    break;
+                case this.specialOrders[1] || null:
+                    this.parent.specialAction(this.specialAnswers[1]);
+                    this.change("default");
+                    break;
+                default:
+                    this.parent.GameConsole.error("Nie ma takiego polecenia");
+                    break;
+            }
+        }
+    }, {
+        key: "default",
+        value: function _default(order) {
+            switch (order.toLowerCase()) {
+                case "idź na wschód":
+                    this.parent.move(0, 1, "wyruszasz na wschód");
+                    break;
+                case "idź na zachód":
+                    this.parent.move(0, -1, "wyruszasz na zachód");
+                    break;
+                case "idź na północ":
+                    this.parent.move(-1, 0, "wyruszasz na północ");
+                    break;
+                case "idź na południe":
+                    this.parent.move(1, 0, "wyruszasz na południe");
+                    break;
+                case "sprawdź":
+                    this.parent.checkPlace();
+                    break;
+                case "ekwipunek":
+                    this.change("equipment");
+                    this.parent.checkEquipment();
+                    break;
+                case "atakuj":
+                    this.change("fight");
+                    this.parent.startFigth(order);
+                    break;
+                default:
+                    this.parent.GameConsole.error("Nie ma takiego polecenia");
+                    break;
+            }
+        }
+    }]);
+
+    return OrderSwitch;
+}();
+
+exports.default = OrderSwitch;
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 exports.Map = undefined;
@@ -549,13 +815,13 @@ exports.Map = undefined;
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); // Klasa MapImg umożliwia umożliwia działanie mapki z prawej strony konsoli
 
 
-var _mapImg = __webpack_require__(5);
+var _mapImg = __webpack_require__(6);
 
 var _mapImg2 = _interopRequireDefault(_mapImg);
 
 var _gameObject = __webpack_require__(0);
 
-var _enemyConfig = __webpack_require__(6);
+var _enemyConfig = __webpack_require__(10);
 
 var _enemyConfig2 = _interopRequireDefault(_enemyConfig);
 
@@ -702,7 +968,7 @@ var Map = function () {
 exports.Map = Map;
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -748,7 +1014,299 @@ var MapImg = function () {
 exports.default = MapImg;
 
 /***/ }),
-/* 6 */
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var ConsumableItem = function () {
+    function ConsumableItem(name) {
+        var hp = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+        var mana = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+        _classCallCheck(this, ConsumableItem);
+
+        this.name = "[" + name + "]", this.hp = hp, this.mana = mana;
+    }
+
+    _createClass(ConsumableItem, [{
+        key: "showStats",
+        value: function showStats() {
+            return "\n--------------------------\n" + this.name + " \n  " + (this.hp != null ? this.hp + " Odnowienia HP" : this.mana + " Odnowienia MANA") + "\n--------------------------\n        ";
+        }
+    }]);
+
+    return ConsumableItem;
+}();
+
+var ElixirHP = function (_ConsumableItem) {
+    _inherits(ElixirHP, _ConsumableItem);
+
+    function ElixirHP() {
+        _classCallCheck(this, ElixirHP);
+
+        return _possibleConstructorReturn(this, (ElixirHP.__proto__ || Object.getPrototypeOf(ElixirHP)).call(this, "Eliksir HP", 100));
+    }
+
+    return ElixirHP;
+}(ConsumableItem);
+
+var ElixirMP = function (_ConsumableItem2) {
+    _inherits(ElixirMP, _ConsumableItem2);
+
+    function ElixirMP() {
+        _classCallCheck(this, ElixirMP);
+
+        return _possibleConstructorReturn(this, (ElixirMP.__proto__ || Object.getPrototypeOf(ElixirMP)).call(this, "Eliksir MANA", null, 100));
+    }
+
+    return ElixirMP;
+}(ConsumableItem);
+
+var Food = function (_ConsumableItem3) {
+    _inherits(Food, _ConsumableItem3);
+
+    function Food() {
+        _classCallCheck(this, Food);
+
+        return _possibleConstructorReturn(this, (Food.__proto__ || Object.getPrototypeOf(Food)).call(this, "Jedzenie", 20));
+    }
+
+    return Food;
+}(ConsumableItem);
+
+exports.ElixirHP = ElixirHP;
+exports.ElixirMP = ElixirMP;
+exports.Food = Food;
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Item = function () {
+    function Item(type, object) {
+        _classCallCheck(this, Item);
+
+        this.name = "< " + object.name + " >", this.type = type, this.hp = object.hp, this.mana = object.mana, this.attack = object.attack, this.defence = object.defence;
+    }
+
+    _createClass(Item, [{
+        key: "showStats",
+        value: function showStats() {
+            return "\n--------------------------\n" + this.name + "\n  (-- " + this.type + " --)\n  + " + this.hp + " HP\n  + " + this.mana + " MP\n  + " + this.attack + " Ataku\n  + " + this.defence + " Obrony\n--------------------------\n\n";
+        }
+    }]);
+
+    return Item;
+}();
+
+var Armor = function (_Item) {
+    _inherits(Armor, _Item);
+
+    function Armor(object) {
+        _classCallCheck(this, Armor);
+
+        return _possibleConstructorReturn(this, (Armor.__proto__ || Object.getPrototypeOf(Armor)).call(this, "Zbroja", object));
+    }
+
+    return Armor;
+}(Item);
+
+var Shoes = function (_Item2) {
+    _inherits(Shoes, _Item2);
+
+    function Shoes(object) {
+        _classCallCheck(this, Shoes);
+
+        return _possibleConstructorReturn(this, (Shoes.__proto__ || Object.getPrototypeOf(Shoes)).call(this, "Buty", object));
+    }
+
+    return Shoes;
+}(Item);
+
+var Weapon = function (_Item3) {
+    _inherits(Weapon, _Item3);
+
+    function Weapon(object) {
+        _classCallCheck(this, Weapon);
+
+        return _possibleConstructorReturn(this, (Weapon.__proto__ || Object.getPrototypeOf(Weapon)).call(this, "Broń", object));
+    }
+
+    return Weapon;
+}(Item);
+
+exports.Armor = Armor;
+exports.Shoes = Shoes;
+exports.Weapon = Weapon;
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var ArmorConfig = [{
+    name: "Bawełniana Koszula",
+    hp: 10,
+    mana: 0,
+    attack: 0,
+    defence: 2
+}, {
+    name: "Skurzana Zbroja",
+    hp: 20,
+    mana: 10,
+    attack: 0,
+    defence: 12
+}, {
+    name: "Kolczuga",
+    hp: 40,
+    mana: 15,
+    attack: 0,
+    defence: 30
+}, {
+    name: "Zbroja",
+    hp: 50,
+    mana: 30,
+    attack: 0,
+    defence: 50
+}];
+
+var BootsConfig = [{
+    name: "Sandały",
+    hp: 10,
+    mana: 0,
+    attack: 0,
+    defence: 2
+}, {
+    name: "Trzewiki",
+    hp: 20,
+    mana: 10,
+    attack: 0,
+    defence: 12
+}, {
+    name: "Skórzane buty",
+    hp: 40,
+    mana: 15,
+    attack: 0,
+    defence: 30
+}, {
+    name: "Rycerskie buty",
+    hp: 50,
+    mana: 30,
+    attack: 0,
+    defence: 50
+}];
+
+var WeaponConfig = [{
+    name: "Drewniana pałka",
+    hp: 10,
+    mana: 0,
+    attack: 0,
+    defence: 2
+}, {
+    name: "Tasak kuchenny",
+    hp: 20,
+    mana: 10,
+    attack: 0,
+    defence: 12
+}, {
+    name: "Sztylet",
+    hp: 40,
+    mana: 15,
+    attack: 0,
+    defence: 30
+}, {
+    name: "Długi miecz",
+    hp: 50,
+    mana: 30,
+    attack: 0,
+    defence: 50
+}];
+
+var ItemCollector = {
+    armors: ArmorConfig,
+    boots: BootsConfig,
+    weapons: WeaponConfig,
+
+    getArmor: function getArmor() {
+        var chanceRate = Math.round(Math.random() * 100);
+
+        if (chanceRate > 94) {
+            return this.armors[3];
+        } else if (chanceRate > 84) {
+            return this.armors[2];
+        } else if (chanceRate > 64) {
+            return this.armors[1];
+        } else {
+            return this.armors[0];
+        }
+    },
+    getBoots: function getBoots() {
+        var chanceRate = Math.round(Math.random() * 100);
+
+        if (chanceRate > 94) {
+            return this.boots[3];
+        } else if (chanceRate > 84) {
+            return this.boots[2];
+        } else if (chanceRate > 64) {
+            return this.boots[1];
+        } else {
+            return this.boots[0];
+        }
+    },
+    getWeapon: function getWeapon() {
+        var chanceRate = Math.round(Math.random() * 100);
+
+        if (chanceRate > 94) {
+            return this.weapons[3];
+        } else if (chanceRate > 84) {
+            return this.weapons[2];
+        } else if (chanceRate > 64) {
+            return this.weapons[1];
+        } else {
+            return this.weapons[0];
+        }
+    }
+};
+
+exports.default = ItemCollector;
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -833,7 +1391,7 @@ var EnemyCollector = {
 exports.default = EnemyCollector;
 
 /***/ }),
-/* 7 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

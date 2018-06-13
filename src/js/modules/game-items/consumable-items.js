@@ -7,10 +7,10 @@ class ConsumableItem {
 
     showStats() {
         return `
-            --------------------------
-            ${this.name} 
-              ${(this.hp != null) ? this.hp +" Odnowienia HP": this.mana +" Odnowienia MANA"}
-            --------------------------
+--------------------------
+${this.name} 
+  ${(this.hp != null) ? this.hp +" Odnowienia HP": this.mana +" Odnowienia MANA"}
+--------------------------
         `;
     }
 }

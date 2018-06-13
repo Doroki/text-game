@@ -71,16 +71,31 @@ class Player extends GameObject {
 		super(name, lvl, exp, hp, mana, attack, defence)
 		
 		this.equipment = [new Armor(ItemCollector.armors[0]), new Shoes(ItemCollector.boots[0]), new Weapon(ItemCollector.weapons[0])],
-		this.backpack = []
+		this.backpack = [new Armor(ItemCollector.armors[2]), new ElixirHP(), new ElixirHP(), new Food()]
 	}
 	
 	lvlUp() {
 		
 	}
 	
-	changeEq() {
+	changeEq(itemName) {
+		const foundItem = this.backpack.filter(item => item.name === itemName);
 		
+		if(foundItem.length > 0) {
+			const typeToChange = foundItem[0].type;
+			const itemToChange = this.equipment.filter(item => item.type === typeToChange)[0];
+			const indexOfItem = this.equipment.indexOf(itemToChange);
+
+			this.equipment[indexOfItem] = foundItem[0];
+			this.backpack.splice(this.backpack.indexOf(foundItem[0]))
+			this.backpack.push(itemToChange);
+
+			return `zamieniłeś ${itemToChange.name} na ${itemName}`;
+		} else {
+			return `Nie znaleziono takiego przedmiotu w plecaku, upewnij się że poprawnie wpisałeś nazwę`;
+		}
 	}
+
 	
 	collectItem() {
 		
@@ -94,17 +109,32 @@ class Player extends GameObject {
 
 	showBag() {
 		let bag = "W plecaku masz: \n\n";
-		this.backpack.map(item => bag += ` ${item.name} \n`);
-		return bag += "\n";
+		let temporaryBag = "";
+
+		this.backpack.map(item => {
+			if(temporaryBag.indexOf(item.name) > 0) return;
+
+			let itemsCount = this.backpack.filter(i => i.name === item.name).length;
+			temporaryBag += (itemsCount) ? ` ${item.name} x${itemsCount} ` : ` ${item.name} `;
+		});
+
+		
+		return bag += temporaryBag;
 	}
 
-	clothStats(name) {
-		if(name = "Armor") {
-			return this.equipment[0].showStats();
-		} else if(name = "Shoes") {
-			return this.equipment[1].showStats();
-		} else if(name = "Weapon") {
-			return this.equipment[2].showStats();
+	clothStats(itemName) {
+		const foundInEq = this.equipment.filter(item => item.name === `< ${itemName} >`);
+		const foundInBag = this.backpack.filter(item => item.name === `< ${itemName} >`);
+		const foundConsumable = this.backpack.filter(item => item.name === `[${itemName}]`);
+
+		if(foundInEq.length > 0) {
+			return foundInEq[0].showStats();
+		} else if(foundInBag.length > 0){
+			return foundInBag[0].showStats();
+		} else if(foundConsumable.length > 0){
+			return foundConsumable[0].showStats();
+		} else {
+			return `Nie znaleziono takiego przedmiotu, upewnij się że poprawnie wpisałeś nazwę`;
 		}
 	}
 }
