@@ -18,7 +18,7 @@ class OrderSwitch {
         this.actualOrders = this[orderSetup];
     }
 
-    fight() {
+    fight(order) {
         switch (order.toLowerCase()) {
             case "użyj eliksir hp":
                 // funkcja
@@ -108,9 +108,8 @@ class OrderSwitch {
                 this.change("equipment");
                 this.parent.checkEquipment();
                 break;
-            case "atakuj":
-                this.change("fight");
-                this.parent.startFigth(order);
+            case (order.toLowerCase().match(/^atakuj (\s*\b[a-zA-Z]+\b){1,3}/) || "").input:
+                this.parent.fight(order);
                 break;
             default:
                 this.parent.GameConsole.error("Nie ma takiego polecenia");

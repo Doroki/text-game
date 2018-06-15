@@ -1,6 +1,7 @@
 import {Food, ElixirHP, ElixirMP} from '../game-items/consumable-items.js';
 import {Armor, Shoes, Weapon} from '../game-items/wearable-item.js';
 import ItemCollector from '../game-items/items-config.js';
+import ExpSchema from '../../config-files/exp-schema.js';
 
 class GameObject {
 	constructor(configObj) {
@@ -10,11 +11,27 @@ class GameObject {
 		this.hp = configObj.hp,
 		this.mana = configObj.mana,
 		this.attack = configObj.attack,
-		this.defence = configObj.defence
+		this.defence = configObj.defence,
+
+		this.actualHP = this.hp,
+		this.actualMP = this.mana;
 	}
 	
-	attack() {
-		
+	hit(GameObjectToAttack) {
+		const attackPower = this.attack * 2 + this.lvl;
+		const dealtDamage = GameObjectToAttack.getHit(attackPower);
+
+		return `${this.name} zaatakował i zadał ci ${dealtDamage} obrażen`;	
+	}
+
+	getHit(hitValue) {
+		const defencePower = this.defence;
+		const recivedDamage = hitValue - this.defence;
+		this.actualHP -= recivedDamage;
+		// if(this.actualHP <= 0){
+		// 	return ''
+		// }
+		return recivedDamage;
 	}
 }
 
@@ -70,6 +87,8 @@ class Player extends GameObject {
 	constructor(configObj) {
 		super(configObj)
 		
+		this.usedHP = this.hp,
+		this.usedMP = this.mana,
 		this.equipment = [],
 		this.backpack = [],
 
@@ -77,12 +96,27 @@ class Player extends GameObject {
 		this.collectItem([new Armor(ItemCollector.armors[2]), new ElixirHP(), new ElixirHP(), new Food()]);
 	}
 
-	gainExp(valueValue) {
-		this.exp += expValue;
+	hit(GameObjectToAttack) {
+		const defaultReturn = super.hit(GameObjectToAttack)
+		const dealtDamage = defaultReturn.match(/\d+/g);
 
-		const lvlPlan = this.ExpSchema.filter(plan => plan.lvl === this.lvl + 1);
-		if(lvlPlan[0].exp >= this.exp) {
+		return `Atakując, zadałeś ${dealtDamage} obrażen`;	
+	}
+
+	// getHit(hitValue) {
+	// 	const amoun = super.getHit(hitValue);
+	// }
+
+	gainExp(expValue) {
+		console.log(this.exp)
+		this.exp += expValue;
+		console.log(this.exp)
+		const lvlPlan = ExpSchema.filter(plan => plan.lvl === this.lvl + 1);
+		if(this.exp >= lvlPlan[0].exp) {
 			this.lvlUp();
+			return `GRATULACJE!!! Awansowałeś na ${this.lvl} lvl`;
+		} else {
+			return false;
 		}
 	}
 	
@@ -150,9 +184,16 @@ class Player extends GameObject {
 
 	collectItem(arrOfItems) {
 		if(arrOfItems.length > 0) {
+			let dropItemList = "";
+
 			arrOfItems.forEach(item => {
 				this.backpack.push(item);
+				dropItemList += `${item.name} `;
 			})
+			
+			return dropItemList;
+		} else {
+			return "Niestety przeciwnik nie miał nic przy sobie...";
 		}
 	}
 

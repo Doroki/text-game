@@ -23,13 +23,13 @@ class Game {
 	}
 
 	// ---- ASYNCHRONICZNA FUNKCJA, WYŚWIETLA POLECNIA W POPRAWNEJ KOLEJNOŚCI
-	asyncFunc(callback) {
+	asyncFunc(callback, timer1) {
 		return new Promise((resolve) => {
-			const timer = callback();
+			const timer2 = callback();
 			// timer - do zmiennej przypisywana jest wartosc zwracana, długosc tekstu * timeout, informuje kiedy animacja pisania się zakończy
 			setTimeout(() => {
 				resolve(true)
-			}, timer);
+			}, timer1 || timer2);
 		});
 	}
 
@@ -53,6 +53,41 @@ class Game {
 	};
 
 	useItem() {}
+
+	fight(order) {
+		const enemyName = order.slice(7);
+		const Enemy = this.GameMap.findEnemy(enemyName);
+
+		if(Enemy){
+			this.startFight(Enemy);
+		} else {
+			this.GameConsole.error(`Niestety nie ma w okolicy, takiego przeciwnika...`);
+		}
+	}
+
+	startFight(Enemy) {
+		this.OrderSwitch.change("fight");
+
+		this.asyncFunc(() => {
+			this.GameConsole.present(this.Player.hit(Enemy))
+		}, 1500).then((resolve) => {
+			this.GameConsole.present(Enemy.hit(this.Player))
+		}).then(() => {
+			setTimeout(() => {
+				if (Enemy.actualHP > 0) {
+					this.startFight(Enemy);
+				} else {
+					const lvlMsg = this.Player.gainExp(Enemy.exp);
+
+					if(lvlMsg) this.GameConsole.info(lvlMsg);
+
+					const dropItemList = this.Player.collectItem(Enemy.itemDrop);
+					this.GameConsole.info("Zdobyłeś: " + dropItemList);
+					this.OrderSwitch.change("default");
+				}
+			}, 1500);
+		});
+	};
 
 	talkNPC() {}
 
@@ -120,7 +155,6 @@ class Game {
 						Bądź ostrożny, niedaleko widać: ${
 								locationInfo.monsterList.map(monster => ` ${monster.name}`)
 						}`);
-				console.log(locationInfo.monsterList.map(monster => monster.itemDrop))
 			}
 		});
 	}

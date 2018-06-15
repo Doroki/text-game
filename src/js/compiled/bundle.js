@@ -75,6 +75,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Player = exports.Npc = exports.Enemy = undefined;
 
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _consumableItems = __webpack_require__(7);
@@ -84,6 +86,10 @@ var _wearableItem = __webpack_require__(8);
 var _itemsConfig = __webpack_require__(9);
 
 var _itemsConfig2 = _interopRequireDefault(_itemsConfig);
+
+var _expSchema = __webpack_require__(10);
+
+var _expSchema2 = _interopRequireDefault(_expSchema);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -97,12 +103,28 @@ var GameObject = function () {
 	function GameObject(configObj) {
 		_classCallCheck(this, GameObject);
 
-		this.name = configObj.name, this.lvl = configObj.lvl, this.exp = configObj.exp, this.hp = configObj.hp, this.mana = configObj.mana, this.attack = configObj.attack, this.defence = configObj.defence;
+		this.name = configObj.name, this.lvl = configObj.lvl, this.exp = configObj.exp, this.hp = configObj.hp, this.mana = configObj.mana, this.attack = configObj.attack, this.defence = configObj.defence, this.actualHP = this.hp, this.actualMP = this.mana;
 	}
 
 	_createClass(GameObject, [{
-		key: 'attack',
-		value: function attack() {}
+		key: 'hit',
+		value: function hit(GameObjectToAttack) {
+			var attackPower = this.attack * 2 + this.lvl;
+			var dealtDamage = GameObjectToAttack.getHit(attackPower);
+
+			return this.name + ' zaatakowa\u0142 i zada\u0142 ci ' + dealtDamage + ' obra\u017Cen';
+		}
+	}, {
+		key: 'getHit',
+		value: function getHit(hitValue) {
+			var defencePower = this.defence;
+			var recivedDamage = hitValue - this.defence;
+			this.actualHP -= recivedDamage;
+			// if(this.actualHP <= 0){
+			// 	return ''
+			// }
+			return recivedDamage;
+		}
 	}]);
 
 	return GameObject;
@@ -179,34 +201,59 @@ var Player = function (_GameObject3) {
 
 		var _this3 = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, configObj));
 
-		_this3.equipment = [new _wearableItem.Armor(_itemsConfig2.default.armors[0]), new _wearableItem.Shoes(_itemsConfig2.default.boots[0]), new _wearableItem.Weapon(_itemsConfig2.default.weapons[0])], _this3.backpack = [new _wearableItem.Armor(_itemsConfig2.default.armors[2]), new _consumableItems.ElixirHP(), new _consumableItems.ElixirHP(), new _consumableItems.Food()];
+		_this3.usedHP = _this3.hp, _this3.usedMP = _this3.mana, _this3.equipment = [], _this3.backpack = [], _this3.putOnEq([new _wearableItem.Armor(_itemsConfig2.default.armors[0]), new _wearableItem.Shoes(_itemsConfig2.default.boots[0]), new _wearableItem.Weapon(_itemsConfig2.default.weapons[0])]);
+		_this3.collectItem([new _wearableItem.Armor(_itemsConfig2.default.armors[2]), new _consumableItems.ElixirHP(), new _consumableItems.ElixirHP(), new _consumableItems.Food()]);
 		return _this3;
 	}
 
 	_createClass(Player, [{
-		key: 'lvlUp',
-		value: function lvlUp() {}
+		key: 'hit',
+		value: function hit(GameObjectToAttack) {
+			var defaultReturn = _get(Player.prototype.__proto__ || Object.getPrototypeOf(Player.prototype), 'hit', this).call(this, GameObjectToAttack);
+			var dealtDamage = defaultReturn.match(/\d+/g);
+
+			return 'Atakuj\u0105c, zada\u0142e\u015B ' + dealtDamage + ' obra\u017Cen';
+		}
+
+		// getHit(hitValue) {
+		// 	const amoun = super.getHit(hitValue);
+		// }
+
 	}, {
-		key: 'updateStats',
-		value: function updateStats(way) {
+		key: 'gainExp',
+		value: function gainExp(expValue) {
 			var _this4 = this;
 
-			if (way = "increase") {
-				this.equipment.forEach(function (item) {
-					// console.log(item)
-					_this4.hp += item.hp;
-					_this4.mana += item.mana;
-					_this4.attack += item.attack;
-					_this4.defence += item.defence;
-				});
-			} else if (way = "decrease") {
-				this.equipment.forEach(function (item) {
-					console.log(_this4);
-					_this4.hp -= item.hp;
-					_this4.mana -= item.mana;
-					_this4.attack -= item.attack;
-					_this4.defence -= item.defence;
-				});
+			console.log(this.exp);
+			this.exp += expValue;
+			console.log(this.exp);
+			var lvlPlan = _expSchema2.default.filter(function (plan) {
+				return plan.lvl === _this4.lvl + 1;
+			});
+			if (this.exp >= lvlPlan[0].exp) {
+				this.lvlUp();
+				return 'GRATULACJE!!! Awansowa\u0142e\u015B na ' + this.lvl + ' lvl';
+			}
+		}
+	}, {
+		key: 'lvlUp',
+		value: function lvlUp() {
+			this.lvl += 1;
+			this.updateStats("increase", { hp: 20, mana: 10, attack: 2, defence: 2 });
+		}
+	}, {
+		key: 'updateStats',
+		value: function updateStats(way, itemChanged) {
+			if (way === "increase") {
+				this.hp += itemChanged.hp;
+				this.mana += itemChanged.mana;
+				this.attack += itemChanged.attack;
+				this.defence += itemChanged.defence;
+			} else if (way === "decrease") {
+				this.hp -= itemChanged.hp;
+				this.mana -= itemChanged.mana;
+				this.attack -= itemChanged.attack;
+				this.defence -= itemChanged.defence;
 			}
 		}
 	}, {
@@ -214,30 +261,36 @@ var Player = function (_GameObject3) {
 		value: function putOnEq(itemsArr) {
 			var _this5 = this;
 
+			if (this.equipment.length >= 3) return;
+
 			itemsArr.forEach(function (itemToPutOn) {
 				_this5.equipment.push(itemToPutOn);
 				var indexInBag = _this5.backpack.findIndex(function (bagItem) {
 					return bagItem.name === itemToPutOn.name;
 				});
-				_this5.backpack.splice(indexInBag, 1);
+				if (indexInBag >= 0) {
+					_this5.backpack.splice(indexInBag, 1);
+				}
+				_this5.updateStats("increase", itemToPutOn);
 			});
-
-			this.updateStats("increase");
 		}
 	}, {
 		key: 'takeOffEq',
 		value: function takeOffEq(itemsArr) {
 			var _this6 = this;
 
+			if (this.equipment.length <= 0) return;
+
 			itemsArr.forEach(function (itemToTakeOff) {
 				_this6.backpack.push(itemToTakeOff);
 				var indexInEq = _this6.equipment.findIndex(function (eqItem) {
 					return eqItem.name === itemToTakeOff.name;
 				});
-				_this6.equipment.splice(indexInEq, 1);
+				if (indexInEq >= 0) {
+					_this6.equipment.splice(indexInEq, 1);
+				}
+				_this6.updateStats("decrease", itemToTakeOff);
 			});
-
-			this.updateStats("decrease");
 		}
 	}, {
 		key: 'changeEq',
@@ -262,7 +315,22 @@ var Player = function (_GameObject3) {
 		}
 	}, {
 		key: 'collectItem',
-		value: function collectItem() {}
+		value: function collectItem(arrOfItems) {
+			var _this7 = this;
+
+			if (arrOfItems.length > 0) {
+				var dropItemList = "";
+
+				arrOfItems.forEach(function (item) {
+					_this7.backpack.push(item);
+					dropItemList += item.name + ' ';
+				});
+
+				return dropItemList;
+			} else {
+				return "Niestety przeciwnik nie miał nic przy sobie...";
+			}
+		}
 	}, {
 		key: 'showClothes',
 		value: function showClothes() {
@@ -275,7 +343,7 @@ var Player = function (_GameObject3) {
 	}, {
 		key: 'showBag',
 		value: function showBag() {
-			var _this7 = this;
+			var _this8 = this;
 
 			var bag = "W plecaku masz: \n\n";
 			var temporaryBag = "";
@@ -283,12 +351,11 @@ var Player = function (_GameObject3) {
 			this.backpack.map(function (item) {
 				if (temporaryBag.indexOf(item.name) > 0) return;
 
-				var itemsCount = _this7.backpack.filter(function (i) {
+				var itemsCount = _this8.backpack.filter(function (i) {
 					return i.name === item.name;
 				}).length;
-				temporaryBag += itemsCount ? ' ' + item.name + ' x' + itemsCount + ' ' : ' ' + item.name + ' ';
+				temporaryBag += itemsCount > 1 ? ' ' + item.name + 'x' + itemsCount + ' ' : ' ' + item.name + ' ';
 			});
-
 			return bag += temporaryBag;
 		}
 	}, {
@@ -344,7 +411,7 @@ var _orderSwitch2 = _interopRequireDefault(_orderSwitch);
 
 var _map = __webpack_require__(5);
 
-var _scenario = __webpack_require__(11);
+var _scenario = __webpack_require__(12);
 
 var _gameObject = __webpack_require__(0);
 
@@ -364,13 +431,13 @@ var Game = function () {
 
 	_createClass(Game, [{
 		key: 'asyncFunc',
-		value: function asyncFunc(callback) {
+		value: function asyncFunc(callback, timer1) {
 			return new Promise(function (resolve) {
-				var timer = callback();
+				var timer2 = callback();
 				// timer - do zmiennej przypisywana jest wartosc zwracana, długosc tekstu * timeout, informuje kiedy animacja pisania się zakończy
 				setTimeout(function () {
 					resolve(true);
-				}, timer);
+				}, timer1 || timer2);
 			});
 		}
 
@@ -391,6 +458,45 @@ var Game = function () {
 	}, {
 		key: 'useItem',
 		value: function useItem() {}
+	}, {
+		key: 'fight',
+		value: function fight(order) {
+			var enemyName = order.slice(7);
+			var Enemy = this.GameMap.findEnemy(enemyName);
+
+			if (Enemy) {
+				this.startFight(Enemy);
+			} else {
+				this.GameConsole.error('Niestety nie ma w okolicy, takiego przeciwnika...');
+			}
+		}
+	}, {
+		key: 'startFight',
+		value: function startFight(Enemy) {
+			var _this = this;
+
+			this.OrderSwitch.change("fight");
+
+			this.asyncFunc(function () {
+				_this.GameConsole.present(_this.Player.hit(Enemy));
+			}, 1500).then(function (resolve) {
+				_this.GameConsole.present(Enemy.hit(_this.Player));
+			}).then(function () {
+				setTimeout(function () {
+					if (Enemy.actualHP > 0) {
+						_this.startFight(Enemy);
+					} else {
+						var lvlMsg = _this.Player.gainExp(Enemy.exp);
+
+						if (lvlMsg) _this.GameConsole.info(lvlMsg);
+
+						var dropItemList = _this.Player.collectItem(Enemy.itemDrop);
+						_this.GameConsole.info("Zdobyłeś: " + dropItemList);
+						_this.OrderSwitch.change("default");
+					}
+				}, 1500);
+			});
+		}
 	}, {
 		key: 'talkNPC',
 		value: function talkNPC() {}
@@ -442,7 +548,7 @@ var Game = function () {
 	}, {
 		key: 'checkPlace',
 		value: function checkPlace() {
-			var _this = this;
+			var _this2 = this;
 
 			var event = this.GameMap.currentLocation.event;
 			var specialOrders = this.GameMap.currentLocation.orders;
@@ -455,9 +561,9 @@ var Game = function () {
 				this.OrderSwitch.change("special");
 
 				this.asyncFunc(function () {
-					return _this.GameConsole.present(event);
+					return _this2.GameConsole.present(event);
 				}).then(function () {
-					return _this.GameConsole.info("Możliwoci: " + textOrderList);
+					return _this2.GameConsole.info("Możliwoci: " + textOrderList);
 				});
 			} else {
 				this.GameConsole.info('Niestety nic znalaz\u0142es w okolicy, niczego ciekawego...');
@@ -469,19 +575,16 @@ var Game = function () {
 	}, {
 		key: 'presentLocation',
 		value: function presentLocation() {
-			var _this2 = this;
+			var _this3 = this;
 
 			var locationInfo = this.GameMap.currentLocation;
 
 			this.asyncFunc(function () {
-				return _this2.GameConsole.present(locationInfo.description);
+				return _this3.GameConsole.present(locationInfo.description);
 			}).then(function () {
 				if (locationInfo.monsterList.length) {
-					_this2.GameConsole.warning('\n\t\t\t\t\t\tB\u0105d\u017A ostro\u017Cny, niedaleko wida\u0107: ' + locationInfo.monsterList.map(function (monster) {
+					_this3.GameConsole.warning('\n\t\t\t\t\t\tB\u0105d\u017A ostro\u017Cny, niedaleko wida\u0107: ' + locationInfo.monsterList.map(function (monster) {
 						return ' ' + monster.name;
-					}));
-					console.log(locationInfo.monsterList.map(function (monster) {
-						return monster.itemDrop;
 					}));
 				}
 			});
@@ -747,7 +850,7 @@ var OrderSwitch = function () {
         }
     }, {
         key: "fight",
-        value: function fight() {
+        value: function fight(order) {
             switch (order.toLowerCase()) {
                 case "użyj eliksir hp":
                     // funkcja
@@ -842,9 +945,8 @@ var OrderSwitch = function () {
                     this.change("equipment");
                     this.parent.checkEquipment();
                     break;
-                case "atakuj":
-                    this.change("fight");
-                    this.parent.startFigth(order);
+                case (order.toLowerCase().match(/^atakuj (\s*\b[a-zA-Z]+\b){1,3}/) || "").input:
+                    this.parent.fight(order);
                     break;
                 default:
                     this.parent.GameConsole.error("Nie ma takiego polecenia");
@@ -879,7 +981,7 @@ var _mapImg2 = _interopRequireDefault(_mapImg);
 
 var _gameObject = __webpack_require__(0);
 
-var _enemyConfig = __webpack_require__(10);
+var _enemyConfig = __webpack_require__(11);
 
 var _enemyConfig2 = _interopRequireDefault(_enemyConfig);
 
@@ -1012,6 +1114,19 @@ var Map = function () {
 			});
 		}
 	}, {
+		key: 'findEnemy',
+		value: function findEnemy(name) {
+			var foudEnemy = this.currentLocation.monsterList.filter(function (enemy) {
+				return enemy.name === name;
+			});
+
+			if (foudEnemy.length >= 0) {
+				return foudEnemy[0];
+			} else {
+				return false;
+			}
+		}
+	}, {
 		key: 'initMap',
 		value: function initMap() {
 			this.createMap();
@@ -1103,7 +1218,7 @@ var ConsumableItem = function () {
     _createClass(ConsumableItem, [{
         key: "showStats",
         value: function showStats() {
-            return "\n--------------------------\n" + this.name + " \n  " + (this.hp != null ? this.hp + " Odnowienia HP" : this.mana + " Odnowienia MANA") + "\n--------------------------\n        ";
+            return "\n            --------------------------\n            " + this.name + " \n            " + (this.hp != null ? this.hp + " Odnowienia HP" : this.mana + " Odnowienia MP") + "\n            --------------------------\n        ";
         }
     }]);
 
@@ -1128,7 +1243,7 @@ var ElixirMP = function (_ConsumableItem2) {
     function ElixirMP() {
         _classCallCheck(this, ElixirMP);
 
-        return _possibleConstructorReturn(this, (ElixirMP.__proto__ || Object.getPrototypeOf(ElixirMP)).call(this, "Eliksir MANA", null, 100));
+        return _possibleConstructorReturn(this, (ElixirMP.__proto__ || Object.getPrototypeOf(ElixirMP)).call(this, "Eliksir MP", null, 100));
     }
 
     return ElixirMP;
@@ -1179,7 +1294,7 @@ var Item = function () {
     _createClass(Item, [{
         key: "showStats",
         value: function showStats() {
-            return "\n--------------------------\n" + this.name + "\n  (-- " + this.type + " --)\n  + " + this.hp + " HP\n  + " + this.mana + " MP\n  + " + this.attack + " Ataku\n  + " + this.defence + " Obrony\n--------------------------\n\n";
+            return "\n            --------------------------\n            " + this.name + "\n            (-- " + this.type + " --)\n            + " + this.hp + " HP\n            + " + this.mana + " MP\n            + " + this.attack + " Ataku\n            + " + this.defence + " Obrony\n            --------------------------\n\n        ";
         }
     }]);
 
@@ -1371,85 +1486,99 @@ exports.default = ItemCollector;
 
 
 Object.defineProperty(exports, "__esModule", {
-				value: true
+    value: true
+});
+var ExpSchema = [{ lvl: 2, exp: 100 }, { lvl: 3, exp: 200 }, { lvl: 4, exp: 400 }, { lvl: 5, exp: 800 }, { lvl: 6, exp: 1600 }, { lvl: 7, exp: 3200 }, { lvl: 8, exp: 6400 }, { lvl: 9, exp: 25600 }, { lvl: 10, exp: 51200 }, { lvl: 11, exp: 100000 }, { lvl: 12, exp: 150000 }, { lvl: 13, exp: 200000 }, { lvl: 14, exp: 250000 }, { lvl: 15, exp: 300000 }, { lvl: 16, exp: 350000 }, { lvl: 17, exp: 400000 }, { lvl: 18, exp: 450000 }, { lvl: 19, exp: 500000 }, { lvl: 20, exp: 550000 }, { lvl: 21, exp: 600000 }, { lvl: 22, exp: 650000 }, { lvl: 23, exp: 700000 }, { lvl: 24, exp: 750000 }, { lvl: 25, exp: 800000 }, { lvl: 26, exp: 850000 }, { lvl: 27, exp: 900000 }, { lvl: 28, exp: 950000 }, { lvl: 29, exp: 1000000 }, { lvl: 30, exp: 1050000 }, { lvl: 31, exp: 1100000 }, { lvl: 32, exp: 1200000 }, { lvl: 33, exp: 1300000 }, { lvl: 34, exp: 1400000 }, { lvl: 35, exp: 1500000 }, { lvl: 36, exp: 1600000 }, { lvl: 37, exp: 1700000 }, { lvl: 38, exp: 1800000 }, { lvl: 39, exp: 2000000 }, { lvl: 40, exp: 2100000 }, { lvl: 41, exp: 2200000 }, { lvl: 42, exp: 2300000 }, { lvl: 43, exp: 2400000 }, { lvl: 44, exp: 2500000 }, { lvl: 45, exp: 2600000 }, { lvl: 46, exp: 2700000 }, { lvl: 47, exp: 2800000 }, { lvl: 48, exp: 2900000 }, { lvl: 49, exp: 3000000 }, { lvl: 50, exp: 3100000 }, { lvl: 60, exp: 3200000 }, { lvl: 61, exp: 3300000 }, { lvl: 62, exp: 3400000 }, { lvl: 63, exp: 3500000 }, { lvl: 64, exp: 3600000 }, { lvl: 65, exp: 3700000 }, { lvl: 66, exp: 3800000 }, { lvl: 67, exp: 3900000 }, { lvl: 68, exp: 4000000 }, { lvl: 69, exp: 4100000 }, { lvl: 70, exp: 4200000 }, { lvl: 71, exp: 4300000 }, { lvl: 72, exp: 4400000 }, { lvl: 73, exp: 4500000 }, { lvl: 74, exp: 4600000 }, { lvl: 75, exp: 4700000 }, { lvl: 76, exp: 4800000 }, { lvl: 77, exp: 4900000 }, { lvl: 78, exp: 5000000 }, { lvl: 79, exp: 5100000 }, { lvl: 80, exp: 5200000 }, { lvl: 81, exp: 5300000 }, { lvl: 82, exp: 5400000 }, { lvl: 83, exp: 5500000 }, { lvl: 84, exp: 5600000 }, { lvl: 85, exp: 5700000 }, { lvl: 86, exp: 5800000 }, { lvl: 87, exp: 6000000 }, { lvl: 88, exp: 6200000 }, { lvl: 89, exp: 6400000 }, { lvl: 90, exp: 6600000 }, { lvl: 91, exp: 6800000 }, { lvl: 92, exp: 7000000 }, { lvl: 93, exp: 7200000 }, { lvl: 94, exp: 7400000 }, { lvl: 95, exp: 7600000 }, { lvl: 96, exp: 7800000 }, { lvl: 97, exp: 8000000 }, { lvl: 98, exp: 9000000 }, { lvl: 99, exp: 9500000 }, { lvl: 100, exp: 9990000 }];
+
+exports.default = ExpSchema;
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+		value: true
 });
 
 var ListOfEnemies = [{
-				name: "Szczur",
-				lvl: 1,
-				exp: 10,
-				hp: 40,
-				mana: null,
-				attack: 5,
-				defence: 1
+		name: "Szczur",
+		lvl: 1,
+		exp: 10,
+		hp: 40,
+		mana: null,
+		attack: 5,
+		defence: 1
 }, {
-				name: "Pies",
-				lvl: 1,
-				exp: 12,
-				hp: 50,
-				mana: null,
-				attack: 7,
-				defence: 2
+		name: "Pies",
+		lvl: 1,
+		exp: 12,
+		hp: 50,
+		mana: null,
+		attack: 7,
+		defence: 2
 }, {
-				name: "Niedźwiedź",
-				lvl: 1,
-				exp: 23,
-				hp: 60,
-				mana: null,
-				attack: 10,
-				defence: 4
+		name: "Niedźwiedź",
+		lvl: 1,
+		exp: 23,
+		hp: 60,
+		mana: null,
+		attack: 10,
+		defence: 4
 }, {
-				name: "Smok",
-				lvl: 1,
-				exp: 40,
-				hp: 80,
-				mana: null,
-				attack: 15,
-				defence: 5
+		name: "Smok",
+		lvl: 1,
+		exp: 40,
+		hp: 80,
+		mana: null,
+		attack: 15,
+		defence: 5
 }, {
-				name: "Teściowa",
-				lvl: 1,
-				exp: 50,
-				hp: 90,
-				mana: null,
-				attack: 17,
-				defence: 8
+		name: "Teściowa",
+		lvl: 1,
+		exp: 50,
+		hp: 90,
+		mana: null,
+		attack: 17,
+		defence: 8
 }, {
-				name: "Teściowa z wałkiem",
-				lvl: 1,
-				exp: 56,
-				hp: 100,
-				mana: null,
-				attack: 20,
-				defence: 10
+		name: "Teściowa z wałkiem",
+		lvl: 1,
+		exp: 56,
+		hp: 100,
+		mana: null,
+		attack: 20,
+		defence: 10
 }];
 
 var EnemyCollector = {
-				enemies: ListOfEnemies,
+		enemies: ListOfEnemies,
 
-				getEnemy: function getEnemy() {
-								var chanceRate = Math.round(Math.random() * 100);
+		getEnemy: function getEnemy() {
+				var chanceRate = Math.round(Math.random() * 100);
 
-								if (chanceRate > 90) {
-												return this.enemies[5];
-								} else if (chanceRate > 75) {
-												return this.enemies[4];
-								} else if (chanceRate > 60) {
-												return this.enemies[3];
-								} else if (chanceRate > 45) {
-												return this.enemies[2];
-								} else if (chanceRate > 30) {
-												return this.enemies[1];
-								} else {
-												return this.enemies[0];
-								}
+				if (chanceRate > 90) {
+						return this.enemies[5];
+				} else if (chanceRate > 75) {
+						return this.enemies[4];
+				} else if (chanceRate > 60) {
+						return this.enemies[3];
+				} else if (chanceRate > 45) {
+						return this.enemies[2];
+				} else if (chanceRate > 30) {
+						return this.enemies[1];
+				} else {
+						return this.enemies[0];
 				}
+		}
 };
 
 exports.default = EnemyCollector;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

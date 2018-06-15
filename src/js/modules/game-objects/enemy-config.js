@@ -65,15 +65,20 @@ const EnemyCollector = {
         if(chanceRate > 90) {
             return this.enemies[5];
         } else if(chanceRate > 75) {
-            return this.enemies[4];
+			return this.
+			enemies[4];
         } else if(chanceRate > 60) {
-            return this.enemies[3];
+			return this.
+			enemies[3];
         } else if(chanceRate > 45){
-            return this.enemies[2];
+			return this.
+			enemies[2];
         } else if(chanceRate > 30){
-            return this.enemies[1];
+			return this.
+			enemies[1];
         } else {
-            return this.enemies[0];
+			return this.
+			enemies[0];
         }
     }
 }

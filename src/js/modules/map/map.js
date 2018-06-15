@@ -114,6 +114,16 @@ class Map {
 			this.topography[iterator].push(new Location(episode))
 		});
 	}
+
+	findEnemy(name) {
+		const foudEnemy = this.currentLocation.monsterList.filter(enemy => enemy.name === name);
+
+		if(foudEnemy.length >= 0) {
+			return foudEnemy[0]
+		} else {
+			return false;
+		}
+	}
 	
 	initMap() {
 		this.createMap();
