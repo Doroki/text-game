@@ -4,8 +4,12 @@ class Console {
     constructor() {
         this.ConsoleHistory = new ConsoleHistory();
         this.user = "Player"
+
         this.input = document.querySelector("#input"),
         this.output = document.querySelector("#output"),
+        this.consoleHP = document.querySelector("#hp"),
+        this.consoleMP = document.querySelector("#mp"),
+
         this.infoColor = "#00da12",
         this.errorColor = "#da0000",
         this.warningColor = "#24a2ff"
@@ -17,6 +21,7 @@ class Console {
     typingAnimation(element, text, iterator = 0, speed = 25) {
         if (iterator < text.length) {
             element.textContent += text.charAt(iterator);
+            this.scrollOutput();
             iterator++;
             setTimeout(() => this.typingAnimation(element, text, iterator, speed), speed);
         }
@@ -26,6 +31,7 @@ class Console {
         let newParagraph = document.createElement("p");
         newParagraph.textContent = value;
         this.output.appendChild(newParagraph);
+        this.scrollOutput();
     }
 
     info(value) {
@@ -33,6 +39,7 @@ class Console {
         newParagraph.style.color = this.infoColor;
         newParagraph.textContent = value;
         this.output.appendChild(newParagraph);
+        this.scrollOutput();
     }
 
     present(value) {
@@ -49,6 +56,7 @@ class Console {
         newParagraph.style.color = this.warningColor;
         newParagraph.textContent = value;
         this.output.appendChild(newParagraph);
+        this.scrollOutput();
     }
 
     error(value) {
@@ -56,6 +64,7 @@ class Console {
         newParagraph.style.color = this.errorColor;
         newParagraph.textContent = value;
         this.output.appendChild(newParagraph);
+        this.scrollOutput();
     }
 
     listenPlayer(callback) {
@@ -63,6 +72,7 @@ class Console {
 
             if (e.keyCode === 13) { //enter
                 e.preventDefault();
+                if(e.target.value === "" || e.target.value.indexOf(" ") === 0) return; // sprawdza czy w input jest pusty czy czy ma spacje jako pierwszy znak i zapobiega dalszej akcji
 
                 const inputText = this.input.value;
                 this.write(`${this.user}: ${inputText}`);
@@ -85,13 +95,16 @@ class Console {
         })
     }
 
-    disable() {
-        this.input.disabled = "disabled";
+    scrollOutput() {
+        this.output.scrollTo(0, this.output.scrollHeight);
     }
 
-    enable() {
-        this.input.disabled = "";
-        this.input.focus();
+    updateStats(statsObj) {
+        const HPToShow = Math.round(statsObj.actualHP / statsObj.hp * 100);
+        const MPToShow = Math.round(statsObj.actualMP / statsObj.mana * 100);
+
+       this.consoleHP.textContent = `HP: ${(HPToShow < 0)? 0 : HPToShow}%`
+       this.consoleMP.textContent = `MP: ${(MPToShow < 0)? 0 : MPToShow}%`
     }
 }
 

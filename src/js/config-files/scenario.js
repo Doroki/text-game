@@ -1,5 +1,4 @@
-export const scenario = [
-	
+const scenario = [
 	
 	{
 		description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża oraz starej chaty połozonej nieopodal",
@@ -77,3 +76,5 @@ export const scenario = [
 ];
 
 
+
+export default scenario;

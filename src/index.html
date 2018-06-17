@@ -14,9 +14,13 @@
 <form class="console">
         <div id="output" class="console__summary" disabled="disabled">
         </div>
-        <label class="console__sign">
+        <div class="console__input-wrapper">
+            <span class="console__stats">
+                <span id="hp" class="console__HP">HP: ----</span>
+                <span id="mp" class="console__MP">MP: ----</span>
+            </span>
             <input id="input" class="console__input" type="text" autocomplete="off" spellcheck="false">
-        </label>
+        </div>
     </form>
     <section class="view">
         <div id="map" class="map">

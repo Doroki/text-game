@@ -1,3 +1,4 @@
+
 class MapImg {
     constructor(mapGrid) {
         this.mapGrid = mapGrid,

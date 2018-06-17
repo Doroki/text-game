@@ -1,60 +1,6 @@
 import MapImg from './map-img.js'; // Klasa MapImg umożliwia umożliwia działanie mapki z prawej strony konsoli
-import {Enemy} from '../game-objects/game-object.js';
-import EnemyCollector from '../game-objects/enemy-config.js';
+import Location from './location.js'
 
-// -------  LOCATION CLASS ---------- //
-class Location {
-	constructor(scenaryObj) {
-		this.description = scenaryObj.description,
-		this.event = scenaryObj.event.introduce || null,
-		this.orders = this.collectOrders(scenaryObj.event.options),
-		this.orderAnswer = this.collectAnswers(scenaryObj.event.options),
-		this.listOfOrders = this.textOrderList(scenaryObj.event.options),
-		this.monsterList
-	}
-	
-	collectOrders(objArr){
-		if(!objArr) return null;
-		
-		const orders = objArr.map(obj => {
-			return obj.action;
-		});
-		return orders;
-	}
-	
-	collectAnswers(objArr){
-		if(!objArr) return null;
-		
-		const orders = objArr.map(obj => {
-			return obj.answer;
-		});
-		return orders;
-	}
-	
-	textOrderList(objArr){
-		if(!objArr) return null;
-		
-		const orders = objArr.map(obj => {
-			return ` [ ${obj.action} ] `;
-		});
-		return orders;
-	}
-	
-	spawnMonsters() {
-		const listOfEnemy = [];
-		const numberOfEnemy = Math.round(Math.random() * 3);
-		
-		for(let i = 1; i < numberOfEnemy; i++){
-			listOfEnemy.push(new Enemy(EnemyCollector.getEnemy()));
-		}
-		
-		this.monsterList = listOfEnemy;
-	}
-}
-
-
-
-// -------  MAP CLASS ---------- //
 class Map {
 	constructor(scenario, graficMapContainer) {
 		this.MapImage = graficMapContainer,
@@ -116,13 +62,21 @@ class Map {
 	}
 
 	findEnemy(name) {
-		const foudEnemy = this.currentLocation.monsterList.filter(enemy => enemy.name === name);
+		const foudEnemy = this.currentLocation.monsterList.filter(enemy => enemy.name.toLowerCase() === name);
 
 		if(foudEnemy.length >= 0) {
 			return foudEnemy[0]
 		} else {
 			return false;
 		}
+	}
+
+	deleteEnemy(killedEnemy) {
+		const foudEnemy = this.currentLocation.monsterList.findIndex(enemy => enemy.name === killedEnemy.name);
+
+		if(foudEnemy >= 0) {
+			this.currentLocation.monsterList.splice(foudEnemy, 1);
+		} 
 	}
 	
 	initMap() {
@@ -132,4 +86,4 @@ class Map {
 	}
 }
 
-export { Map };
+export default Map;

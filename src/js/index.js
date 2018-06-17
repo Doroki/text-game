@@ -1,17 +1,9 @@
 import Console from './modules/console/console.js'; // Klasa konsoli
 import OrderSwitch from './modules/order-switch.js';
-import {
-	Map
-} from './modules/map/map.js';
-import {
-	scenario
-} from './modules/scenario/scenario.js'; // Zmienna imitująca plik JSON z danymi, które są używane do przypisania informacji, jak opisy, wydarzenie itp. w każdej z lokalizacji
-import {
-	Player
-} from './modules/game-objects/game-object.js';
-
-
-
+import Map from './modules/map/map.js';
+import scenario from './config-files/scenario.js'; // Zmienna imitująca plik JSON z danymi, które są używane do przypisania informacji, jak opisy, wydarzenie itp. w każdej z lokalizacji
+import GameGrow from './config-files/game-grow.js';
+import Player from './modules/game-objects/player.js';
 
 
 class Game {
@@ -26,7 +18,7 @@ class Game {
 	asyncFunc(callback, timer1) {
 		return new Promise((resolve) => {
 			const timer2 = callback();
-			// timer - do zmiennej przypisywana jest wartosc zwracana, długosc tekstu * timeout, informuje kiedy animacja pisania się zakończy
+			// timer2 - do zmiennej przypisywana jest wartosc zwracana, długosc tekstu * timeout, informuje kiedy animacja pisania się zakończy
 			setTimeout(() => {
 				resolve(true)
 			}, timer1 || timer2);
@@ -40,85 +32,103 @@ class Game {
 
 	showPlayerStats() {
 		const statsInfo = `
-		Name:${this.Player.name}
-		LvL:${this.Player.lvl} 
-		Exp:${this.Player.exp}
-		HP:${this.Player.hp}
-		MP:${this.Player.mana}
-		Attack:${this.Player.attack}
-		Deffence:${this.Player.defence}
+		Name: ${this.Player.name}
+		LvL: ${this.Player.lvl} 
+		Exp: ${this.Player.exp}
+		HP: ${this.Player.actualHP} / ${this.Player.hp}
+		MP: ${this.Player.actualMP} / ${this.Player.mana}
+		Attack: ${this.Player.attack}
+		Deffence: ${this.Player.defence}
 		`;
 		
 		this.GameConsole.info(statsInfo);
 	};
 
-	useItem() {}
+	// ---- UŻYCIE KONSUMOWALNEGO PRZEDMIOTU
+	useItem(order) {
+		const itemName = `[${order.slice(5)}]`; // "nazwa przedmiotu zawsze będzie sie zaczynać od indeksu 5, odcinane jest "użyj""
+		const info = this.Player.useItem(itemName.toLowerCase());
+		this.GameConsole.info(info);
+		this.GameConsole.updateStats(this.Player);
+	}
 
+	// ---- SPRAWDZANIE CZY W OKOLICY ZNAJDUJE SIĘ SZUKANY WRÓG
 	fight(order) {
-		const enemyName = order.slice(7);
-		const Enemy = this.GameMap.findEnemy(enemyName);
+		const enemyName = order.slice(7); 
+		const Enemy = this.GameMap.findEnemy(enemyName.toLowerCase()); // sprawdza wrogów
 
 		if(Enemy){
-			this.startFight(Enemy);
+			this.startFight(Enemy); // uruchamia walkę
 		} else {
 			this.GameConsole.error(`Niestety nie ma w okolicy, takiego przeciwnika...`);
 		}
 	}
 
+	// ---- ROZPOCZĘCIE WALKI
 	startFight(Enemy) {
 		this.OrderSwitch.change("fight");
 
-		this.asyncFunc(() => {
+		this.asyncFunc(() => { // asynchronicznie prezentuje przebieg walki
 			this.GameConsole.present(this.Player.hit(Enemy))
-		}, 1500).then((resolve) => {
-			this.GameConsole.present(Enemy.hit(this.Player))
+		}, 1500).then(() => {
+			this.GameConsole.present(Enemy.hit(this.Player));
+			this.GameConsole.updateStats(this.Player);
 		}).then(() => {
-			setTimeout(() => {
-				if (Enemy.actualHP > 0) {
-					this.startFight(Enemy);
-				} else {
-					const lvlMsg = this.Player.gainExp(Enemy.exp);
-
-					if(lvlMsg) this.GameConsole.info(lvlMsg);
-
-					const dropItemList = this.Player.collectItem(Enemy.itemDrop);
-					this.GameConsole.info("Zdobyłeś: " + dropItemList);
-					this.OrderSwitch.change("default");
-				}
-			}, 1500);
+			setTimeout(() => this.checkFightResult(Enemy), 1500); 
 		});
 	};
+
+	// ---- SPRAWDZA PRZEBIEG WALKI, URUCHAMIA KOLEJNĄ JEJ ITERACJE LUB KONCZY W PRZYPADKU BRAKU HP KTÓREJŚ ZE STRON
+	checkFightResult(Enemy) {
+		if (this.Player.actualHP <= 0) { // Przegrana Gracza
+			this.Player.lostFight();
+			this.GameConsole.updateStats(this.Player);
+			this.GameConsole.error(`Niestety przegrałeś walkę, tracisz 20% expa`);
+			this.OrderSwitch.change("default");
+		} else if (Enemy.actualHP > 0) { // Dalszy ciąg walki
+			this.startFight(Enemy);
+		} else { // Wygrana Gracza
+			const lvlMsg = this.Player.gainExp(Enemy.exp);
+			if (lvlMsg) { // Awans na następny LvL
+				this.GameConsole.info(lvlMsg);
+				this.GameConsole.updateStats(this.Player);
+				GameGrow.updateStats(this.Player.lvl);
+			}
+
+			this.GameConsole.info(`${Enemy.name} został pokonany!`);
+			const dropItemList = this.Player.collectItem(Enemy.itemDrop); // zbiera przedmioty po pokonanym przeciwniku
+			this.GameConsole.info("Zdobyłeś: " + dropItemList);
+			this.GameMap.deleteEnemy(Enemy); // usuwa pokonanego przeciwnika
+			this.OrderSwitch.change("default");
+		}
+	}
 
 	talkNPC() {}
 
 	// ---- WYŚWIETLA EKWIPUNEK ORAZ PLECAK GRACZA
 	checkEquipment() {
-		this.GameConsole.info(`Znajdujesz się teraz w menu ekwipunek: \n`);
+		this.GameConsole.info(`\nMENU EKWIPUNEK: \n`);
 		this.GameConsole.warning("\n--------------------------------------------------");
 		this.GameConsole.info(this.Player.showClothes());
 		this.GameConsole.warning("==================================================");
 		this.GameConsole.info(this.Player.showBag());
-		this.GameConsole.warning("\n--------------------------------------------------");
+		this.GameConsole.warning("--------------------------------------------------");
+		this.GameConsole.info("\n");
 	}
 
 	// ---- ZAKLADA WYBRANY EKWIPUNEK ZNAJDUJĄCY SIĘ W PLECAKU
 	wearItem(order) {
 		const itemName = `< ${order.slice(6)} >`; // "nazwa przedmiotu zawsze będzie sie zaczynać od indeksu 6, odcinane jest "załóż""
-		const info = this.Player.changeEq(itemName);
+		const info = this.Player.changeEq(itemName.toLowerCase());
 		this.GameConsole.info(info);
+		this.GameConsole.updateStats(this.Player);
 	}
 
 	// ---- POKAZUJE STATYSTYKI WYBRANEGO EKWIPUNKU
 	checkItem(order) {
-		console.log(order.slice(8))
 		const itemName = order.slice(8); // "nazwa przedmiotu zawsze będzie sie zaczynać od indeksu 8, odcinane jest "sprawdź""
-		const info = this.Player.clothStats(itemName);
+		const info = this.Player.clothStats(itemName.toLowerCase());
 		this.GameConsole.info(info);
-	}
-
-	// ---- WYPISYWANIE POLECEŃ MIEJSC SPECJALNYCH
-	specialAction(text) {
-		this.GameConsole.present(text);
 	}
 
 	// ---- SPRAWDZANIE MIEJSC SPECJALNYCH
@@ -139,7 +149,7 @@ class Game {
 				this.GameConsole.info("Możliwoci: " + textOrderList));
 
 		} else {
-			this.GameConsole.info(`Niestety nic znalazłes w okolicy, niczego ciekawego...`);
+			this.GameConsole.info(`Niestety w okolicy, nie ma nic ciekawego...`);
 		}
 	}
 
@@ -152,7 +162,7 @@ class Game {
 		).then(() => {
 			if (locationInfo.monsterList.length) {
 				this.GameConsole.warning(`
-						Bądź ostrożny, niedaleko widać: ${
+						Bądź ostrożny!, w okolicy widziano: ${
 								locationInfo.monsterList.map(monster => ` ${monster.name}`)
 						}`);
 			}
@@ -171,7 +181,8 @@ class Game {
 
 	start() {
 		this.presentLocation();
-		this.GameConsole.listenPlayer(this.action.bind(this));
+		this.GameConsole.listenPlayer(this.action.bind(this)); // Przekazuje konsoli funkcje, która ma być wywoływana przy każdym wcisnięciu "Enter"
+		this.GameConsole.updateStats(this.Player); 
 	}
 }
 

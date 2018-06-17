@@ -20,21 +20,8 @@ class OrderSwitch {
 
     fight(order) {
         switch (order.toLowerCase()) {
-            case "użyj eliksir hp":
-                // funkcja
-                break;
-            case "użyj eliksir mana":
-                // funkcja
-                break;
-            case "statystyki":
-                // funkcja
-                break;
-            case "załóż":
-                // funkcja
-                break;
-            case "zamknij ekwipunek":
-                // funkcja
-                this.change("default");
+            case (order.toLowerCase().match(/^użyj (\s*\b[a-zA-Z]+\b){1,3}/) || "").input: // sprawdź nazwa przedmiotu
+                this.parent.useItem(order);
                 break;
             default:
                 this.parent.GameConsole.error("Nie ma takiego polecenia");
@@ -44,11 +31,11 @@ class OrderSwitch {
 
     equipment(order) {
         switch (order.toLowerCase()) {
-            case "użyj eliksir hp":
-                // funkcja
+            case (order.toLowerCase().match(/^użyj (\s*\b[a-zA-Z]+\b){1,3}/) || "").input: // sprawdź nazwa przedmiotu
+                this.parent.useItem(order);
                 break;
-            case "użyj eliksir mana":
-                // funkcja
+            case "zjedz":
+                this.parent.useItem("jedz Jedzenie");
                 break;
             case "statystyki":
                 this.parent.showPlayerStats();
@@ -74,11 +61,17 @@ class OrderSwitch {
 
     special(order) {
         switch (order.toLowerCase()) {
+            case (order.toLowerCase().match(/^użyj (\s*\b[a-zA-Z]+\b){1,3}/) || "").input: // sprawdź nazwa przedmiotu
+                this.parent.useItem(order);
+                break;
+            case "zjedz":
+                this.parent.useItem("użyj Jedzenie");
+                break;
             case this.specialOrders[0] || null:
-                this.parent.specialAction(this.specialAnswers[0])
+                this.parent.GameConsole.present(this.specialAnswers[0])
                 break;
             case this.specialOrders[1] || null:
-                this.parent.specialAction(this.specialAnswers[1]);
+                this.parent.GameConsole.present(this.specialAnswers[1]);
                 this.change("default");
                 break;
             default:
@@ -107,6 +100,12 @@ class OrderSwitch {
             case "ekwipunek":
                 this.change("equipment");
                 this.parent.checkEquipment();
+                break;
+            case (order.toLowerCase().match(/^użyj (\s*\b[a-zA-Z]+\b){1,3}/) || "").input: // sprawdź nazwa przedmiotu
+                this.parent.useItem(order);
+                break;
+            case "zjedz":
+                this.parent.useItem("użyj Jedzenie");
                 break;
             case (order.toLowerCase().match(/^atakuj (\s*\b[a-zA-Z]+\b){1,3}/) || "").input:
                 this.parent.fight(order);

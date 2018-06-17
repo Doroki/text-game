@@ -91,27 +91,47 @@ body {
    overflow-y: scroll;
 }
 
-.console__sign {
+.console__input-wrapper {
+  color: #FFF;
+  display: flex;
+}
+
+.console__stats {
     display: flex;
+    flex-direction: column;
     position: relative;
+    justify-content: center;
     height: 35px;
-    padding: 3px 10px 3px 30px;
+    font-size: 13px;
+    padding: 3px 10px 3px 10px;
     background-color: #111;
-    align-content: center;
     cursor: text;
 }
 
-.console__sign::before {
+.console__stats::before {
     content: ">";
     display: block;
     height: 29px;
     position: absolute;
-    bottom: 3px;
-    left: 10px;
+    bottom: 2px;
+    right: 4px;
     color: #FFF;
     font-weight: bold;
-    font-size: 1.3em;
+    font-size: 2em;
     margin-top: -25px;
+}
+
+.console__HP, .console__MP {
+  display: block;
+  width: 80px;
+}
+
+.console__HP {
+  color: green;
+}
+
+.console__MP {
+  color: #5578bf;
 }
 
 .console__input {
