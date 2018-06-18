@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <!--  Meta  -->
+  <meta charset="UTF-8" />
+  <title>My New Pen!</title>
+  
+  <!--  Styles  -->
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+  
+<form class="console">
+        <div id="output" class="console__summary" disabled="disabled">
+        </div>
+        <div class="console__input-wrapper">
+            <span class="console__stats">
+                <span id="hp" class="console__HP">HP: ----</span>
+                <span id="mp" class="console__MP">MP: ----</span>
+            </span>
+            <input id="input" class="console__input" type="text" autocomplete="off" spellcheck="false">
+        </div>
+    </form>
+    <section class="view">
+        <div id="map" class="map">
+            <table>
+                
+            </table>
+        </div>
+        <div id="help" class="help">
+            <h2>POMOC</h2>
+            <h3>Domyślne polecenia:</h3>
+            <ul>
+                <li>idź na wschód</li>
+                <li>idź na zachód</li>
+                <li>idź na północ</li>
+                <li>idź na południe</li>
+                <li>użyj eliksir HP</li>
+                <li>użyj eliksir MP</li>
+                <li>zjedz</li>
+                <li>sprawdź</li>
+                <li>ekwipunek</li>
+                <li>atakuj</li>
+            </ul>
+            <h3>Polecenia z poziomu ekwipunku:</h3>
+            <ul>
+                <li>użyj eliksir HP</li>
+                <li>użyj eliksir MP</li>
+                <li>zjedz</li>
+                <li>statystyki</li>
+                <li>pokaż eq</li>
+                <li>sprawdź {nazwa przedmiotu}</li>
+                <li>załóż {nazwa ekwipunku z plecaka}</li>
+                <li>zamknij ekwipunek</li>
+            </ul>
+            <h3>Polecenia z poziomu walki:</h3>
+            <ul>
+                <li>użyj eliksir HP</li>
+                <li>użyj eliksir MP</li>
+                <li>atak</li>
+                <li>uciekaj</li>
+            </ul>
+            <h3>Polecenia z poziomu specjalnej lokalizacji:</h3>
+            <p>możliwe polecenia z lokacji specjalnej będą pojawiać się jako podpowiedzi</p>
+        </div>
+    </section>
+	
+  <script src="js/index.js" type="module"></script>
+</body>
+</html>
