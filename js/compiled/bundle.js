@@ -98,7 +98,8 @@ var GameObject = function () {
 	_createClass(GameObject, [{
 		key: 'hit',
 		value: function hit(GameObjectToAttack) {
-			var attackPower = this.attack * 2 + this.lvl;
+			var attack = this.attack * 2 + this.lvl;
+			var attackPower = Math.round(attack - attack * (1 / (Math.round(Math.random() * 10) + 1)));
 			var dealtDamage = GameObjectToAttack.getHit(attackPower);
 
 			return this.name + ' zaatakowa\u0142 i zada\u0142 ci ' + dealtDamage + ' obra\u017Cen';
@@ -396,13 +397,21 @@ var _scenario = __webpack_require__(16);
 
 var _scenario2 = _interopRequireDefault(_scenario);
 
+var _greetings = __webpack_require__(17);
+
+var _greetings2 = _interopRequireDefault(_greetings);
+
 var _gameGrow = __webpack_require__(1);
 
 var _gameGrow2 = _interopRequireDefault(_gameGrow);
 
-var _player = __webpack_require__(17);
+var _player = __webpack_require__(18);
 
 var _player2 = _interopRequireDefault(_player);
+
+var _gameObject = __webpack_require__(0);
+
+var _gameObject2 = _interopRequireDefault(_gameObject);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -412,7 +421,7 @@ var Game = function () {
 	function Game() {
 		_classCallCheck(this, Game);
 
-		this.GameConsole = new _console2.default(document.querySelector("#input"), document.querySelector("#output")), this.GameMap = new _map2.default(_scenario2.default, document.querySelector("table")), this.OrderSwitch = new _orderSwitch2.default(this), this.Player = new _player2.default({ name: "Ziomek", lvl: 1, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10 });
+		this.GameConsole = new _console2.default(document.querySelector("#input"), document.querySelector("#output")), this.GameMap = new _map2.default(_scenario2.default, document.querySelector("table")), this.OrderSwitch = new _orderSwitch2.default(this), this.Player = new _player2.default({ name: "", lvl: 0, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10 });
 	}
 
 	// ---- ASYNCHRONICZNA FUNKCJA, WYŚWIETLA POLECNIA W POPRAWNEJ KOLEJNOŚCI
@@ -478,6 +487,8 @@ var Game = function () {
 		value: function startFight(Enemy) {
 			var _this = this;
 
+			var prevOrders = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "default";
+			// prevOrders zmiana zestawu polecen na te sprzed walki
 			this.OrderSwitch.change("fight");
 
 			this.asyncFunc(function () {
@@ -488,7 +499,7 @@ var Game = function () {
 				_this.GameConsole.updateStats(_this.Player);
 			}).then(function () {
 				setTimeout(function () {
-					return _this.checkFightResult(Enemy);
+					return _this.checkFightResult(Enemy, prevOrders);
 				}, 1500);
 			});
 		}
@@ -497,16 +508,16 @@ var Game = function () {
 
 
 		// ---- SPRAWDZA PRZEBIEG WALKI, URUCHAMIA KOLEJNĄ JEJ ITERACJE LUB KONCZY W PRZYPADKU BRAKU HP KTÓREJŚ ZE STRON
-		value: function checkFightResult(Enemy) {
+		value: function checkFightResult(Enemy, prevOrders) {
 			if (this.Player.actualHP <= 0) {
 				// Przegrana Gracza
 				this.Player.lostFight();
 				this.GameConsole.updateStats(this.Player);
 				this.GameConsole.error('Niestety przegra\u0142e\u015B walk\u0119, tracisz 20% expa');
-				this.OrderSwitch.change("default");
+				this.OrderSwitch.change(prevOrders);
 			} else if (Enemy.actualHP > 0) {
 				// Dalszy ciąg walki
-				this.startFight(Enemy);
+				this.startFight(Enemy, prevOrders);
 			} else {
 				// Wygrana Gracza
 				var lvlMsg = this.Player.gainExp(Enemy.exp);
@@ -515,18 +526,50 @@ var Game = function () {
 					this.GameConsole.info(lvlMsg);
 					this.GameConsole.updateStats(this.Player);
 					_gameGrow2.default.updateStats(this.Player.lvl);
+					if (this.Player.lvl === 100) this.endGame();
 				}
 
 				this.GameConsole.info(Enemy.name + ' zosta\u0142 pokonany!');
 				var dropItemList = this.Player.collectItem(Enemy.itemDrop); // zbiera przedmioty po pokonanym przeciwniku
 				this.GameConsole.info("Zdobyłeś: " + dropItemList);
 				this.GameMap.deleteEnemy(Enemy); // usuwa pokonanego przeciwnika
-				this.OrderSwitch.change("default");
+				this.OrderSwitch.change(prevOrders);
 			}
 		}
 	}, {
 		key: 'talkNPC',
 		value: function talkNPC() {}
+
+		// ---- ROZPOCZĘCIE SPECJALNEGO WYDARZENIA PO POLECENIU "sprawdź > wejdź"
+
+	}, {
+		key: 'participEvent',
+		value: function participEvent(description) {
+			var _this2 = this;
+
+			var eventResolve = this.GameMap.currentLocation.eventResolve;
+
+			if (eventResolve.actualHP <= 0) {
+				this.asyncFunc(function () {
+					return _this2.GameConsole.present(description);
+				}).then(function () {
+					_this2.GameConsole.present('Jednak, ju\u017C odwiedzi\u0142e\u015B t\u0105 lokalizacje, jest tu tylko martwy, zabity przez ciebie ' + eventResolve.name);
+				});
+			} else if (eventResolve instanceof _gameObject2.default) {
+				this.asyncFunc(function () {
+					return _this2.GameConsole.present(description);
+				}).then(function () {
+					_this2.GameConsole.warning('Po wej\u015B\u0107iu nieoczekiwanie atakuje Ci\u0119 ' + eventResolve.name);
+					_this2.startFight(eventResolve, "special");
+				});
+			} else {
+				this.asyncFunc(function () {
+					return _this2.GameConsole.present(description);
+				}).then(function () {
+					return _this2.GameConsole.present(eventResolve);
+				});
+			}
+		}
 
 		// ---- WYŚWIETLA EKWIPUNEK ORAZ PLECAK GRACZA
 
@@ -568,7 +611,7 @@ var Game = function () {
 	}, {
 		key: 'checkPlace',
 		value: function checkPlace() {
-			var _this2 = this;
+			var _this3 = this;
 
 			var event = this.GameMap.currentLocation.event;
 			var specialOrders = this.GameMap.currentLocation.orders;
@@ -581,9 +624,9 @@ var Game = function () {
 				this.OrderSwitch.change("special");
 
 				this.asyncFunc(function () {
-					return _this2.GameConsole.present(event);
+					return _this3.GameConsole.present(event);
 				}).then(function () {
-					return _this2.GameConsole.info("Możliwoci: " + textOrderList);
+					return _this3.GameConsole.info("Możliwoci: " + textOrderList);
 				});
 			} else {
 				this.GameConsole.info('Niestety w okolicy, nie ma nic ciekawego...');
@@ -595,15 +638,15 @@ var Game = function () {
 	}, {
 		key: 'presentLocation',
 		value: function presentLocation() {
-			var _this3 = this;
+			var _this4 = this;
 
 			var locationInfo = this.GameMap.currentLocation;
 
 			this.asyncFunc(function () {
-				return _this3.GameConsole.present(locationInfo.description);
+				return _this4.GameConsole.present(locationInfo.description);
 			}).then(function () {
 				if (locationInfo.monsterList.length) {
-					_this3.GameConsole.warning('\n\t\t\t\t\t\tB\u0105d\u017A ostro\u017Cny!, w okolicy widziano: ' + locationInfo.monsterList.map(function (monster) {
+					_this4.GameConsole.warning('\n\t\t\t\t\t\tB\u0105d\u017A ostro\u017Cny!, w okolicy widziano: ' + locationInfo.monsterList.map(function (monster) {
 						return ' ' + monster.name;
 					}));
 				}
@@ -623,11 +666,33 @@ var Game = function () {
 			}
 		}
 	}, {
+		key: 'endGame',
+		value: function endGame() {
+			// Koniec gry
+		}
+	}, {
+		key: 'init',
+		value: function init(order) {
+			this.Player.name = order;
+			this.presentLocation();
+			this.OrderSwitch.change("default");
+			this.GameConsole.updateStats(this.Player);
+		}
+	}, {
 		key: 'start',
 		value: function start() {
-			this.presentLocation();
+			var _this5 = this;
+
+			this.GameConsole.info(_greetings2.default.heading, false);
+
+			this.asyncFunc(function () {
+				return _this5.GameConsole.present(_greetings2.default.description);
+			}).then(function () {
+				return _this5.GameConsole.info('\n\n ABY ROZPOCZ\u0104\u0106 GR\u0118 PODAJ SW\xD3J NICK');
+			});
+
+			this.OrderSwitch.change("gameStart");
 			this.GameConsole.listenPlayer(this.action.bind(this)); // Przekazuje konsoli funkcje, która ma być wywoływana przy każdym wcisnięciu "Enter"
-			this.GameConsole.updateStats(this.Player);
 		}
 	}]);
 
@@ -697,19 +762,25 @@ var Console = function () {
     }, {
         key: "info",
         value: function info(value) {
+            var preformat = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
             var newParagraph = document.createElement("pre");
             newParagraph.style.color = this.infoColor;
             newParagraph.textContent = value;
             this.output.appendChild(newParagraph);
             this.scrollOutput();
+
+            if (!preformat) newParagraph.classList.add("console__ascii-art");
         }
     }, {
         key: "present",
         value: function present(value) {
+            var timeout = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 10;
+
             var newParagraph = document.createElement("p");
             newParagraph.style.color = this.presentColor;
             this.output.appendChild(newParagraph);
-            this.typingAnimation(newParagraph, value, 0, 10);
+            this.typingAnimation(newParagraph, value, 0, timeout);
 
             return value.length * 11; // zwraca czas wykonywania dla funkcji asynchronicznej
         }
@@ -771,8 +842,15 @@ var Console = function () {
             this.output.scrollTo(0, this.output.scrollHeight);
         }
     }, {
+        key: "clear",
+        value: function clear() {
+            this.output.innerHTML = "";
+        }
+    }, {
         key: "updateStats",
         value: function updateStats(statsObj) {
+            if (this.user === "Player") this.user = statsObj.name;
+
             var HPToShow = Math.round(statsObj.actualHP / statsObj.hp * 100);
             var MPToShow = Math.round(statsObj.actualMP / statsObj.mana * 100);
 
@@ -938,7 +1016,7 @@ var OrderSwitch = function () {
                     this.parent.useItem("użyj Jedzenie");
                     break;
                 case this.specialOrders[0] || null:
-                    this.parent.GameConsole.present(this.specialAnswers[0]);
+                    this.parent.participEvent(this.specialAnswers[0]);
                     break;
                 case this.specialOrders[1] || null:
                     this.parent.GameConsole.present(this.specialAnswers[1]);
@@ -985,6 +1063,27 @@ var OrderSwitch = function () {
                 default:
                     this.parent.GameConsole.error("Nie ma takiego polecenia");
                     break;
+            }
+        }
+    }, {
+        key: "gameStart",
+        value: function gameStart(order) {
+            var _this = this;
+
+            var regex = new RegExp("[A-Za-ząęśćźżłóń]*", "g");
+            var nickIsValid = regex.test(order);
+
+            if (nickIsValid) {
+                this.parent.GameConsole.present("Prygotuj się... Rozmoczynamy :)");
+                this.parent.GameConsole.info("\n\n----------------------");
+                this.parent.GameConsole.present("||||||||||||||||||||||", 120);
+                this.parent.GameConsole.info("----------------------");
+                setTimeout(function () {
+                    _this.parent.GameConsole.clear();
+                    _this.parent.init(order);
+                }, 3000);
+            } else {
+                this.parent.GameConsole.error("Nick może składać się tylko z 1 wyrazu i może zawierać jedynie litery");
             }
         }
     }]);
@@ -1199,7 +1298,10 @@ var Location = function () {
 	function Location(scenaryObj) {
 		_classCallCheck(this, Location);
 
-		this.description = scenaryObj.description, this.event = scenaryObj.event.introduce || null, this.orders = this.collectOrders(scenaryObj.event.options), this.orderAnswer = this.collectAnswers(scenaryObj.event.options), this.listOfOrders = this.textOrderList(scenaryObj.event.options), this.monsterList;
+		this.description = scenaryObj.description, this.event = scenaryObj.event.introduce || null, this.orders = this.collectOrders(scenaryObj.event.options), // polecenia przekazywane do orderSwitch
+		this.orderAnswer = this.collectAnswers(scenaryObj.event.options), // odpowiedzi przekazywane do orderSwitch
+		this.listOfOrders = this.textOrderList(scenaryObj.event.options), // Lista polecen do wyświetlenia w konsoli przekazywane do orderSwitch
+		this.eventResolve = this.addEventResolve(scenaryObj.event.resolve), this.monsterList;
 	}
 
 	_createClass(Location, [{
@@ -1231,6 +1333,15 @@ var Location = function () {
 				return ' [ ' + obj.action + ' ] ';
 			});
 			return orders;
+		}
+	}, {
+		key: 'addEventResolve',
+		value: function addEventResolve(resolve) {
+			if (resolve === "enemy") {
+				return new _enemy2.default(_enemyCollector2.default.getEnemy());
+			} else {
+				return resolve;
+			}
 		}
 	}, {
 		key: 'spawnMonsters',
@@ -1512,7 +1623,7 @@ var ListOfEnemies = [{
 		exp: 40,
 		hp: 80,
 		mana: null,
-		attack: 15,
+		attack: 12,
 		defence: 5
 }, {
 		name: "Teściowa",
@@ -1520,7 +1631,7 @@ var ListOfEnemies = [{
 		exp: 50,
 		hp: 90,
 		mana: null,
-		attack: 17,
+		attack: 14,
 		defence: 8
 }, {
 		name: "Teściowa z wałkiem",
@@ -1528,7 +1639,7 @@ var ListOfEnemies = [{
 		exp: 56,
 		hp: 100,
 		mana: null,
-		attack: 20,
+		attack: 16,
 		defence: 10
 }];
 
@@ -1545,62 +1656,377 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 var scenario = [{
-	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża oraz starej chaty połozonej nieopodal",
+	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
 	event: {
-		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było. Ze środka jednak ciągle dobiga dziwny hałas...",
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
 		options: [{
 			action: "wejdź",
-			answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 		}, {
 			action: "odejdź",
-			answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
-		}]
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
 	}
 }, {
-	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża oraz starej chaty połozonej nieopodal",
+	description: "2 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
 	event: {}
 }, {
-	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża oraz starej chaty połozonej nieopodal",
+	description: "3 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
 	event: {
-		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było. Ze środka jednak ciągle dobiga dziwny hałas...",
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
 		options: [{
 			action: "wejdź",
-			answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 		}, {
 			action: "odejdź",
-			answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
-		}]
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
 	}
 }, {
-	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża oraz starej chaty połozonej nieopodal",
+	description: "4 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
 	event: {
-		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było. Ze środka jednak ciągle dobiga dziwny hałas...",
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
 		options: [{
 			action: "wejdź",
-			answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 		}, {
 			action: "odejdź",
-			answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
-		}]
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
 	}
 }, {
-	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża oraz starej chaty połozonej nieopodal",
+	description: "5 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
 	event: {
-		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było. Ze środka jednak ciągle dobiga dziwny hałas...",
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
 		options: [{
 			action: "wejdź",
-			answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 		}, {
 			action: "odejdź",
-			answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
-		}]
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
 	}
+}, {
+	description: "6 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "2 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "3 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "4 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "5 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "6 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "2 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "3 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "4 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "5 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "6 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "2 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "3 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "4 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "5 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "6 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "2 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "3 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "4 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "5 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "6 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "2 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
+}, {
+	description: "3 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "4 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
+	}
+}, {
+	description: "5 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {
+		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było...",
+		options: [{
+			action: "wejdź",
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
+		}, {
+			action: "odejdź",
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
+	}
+}, {
+	description: "6 Idąc dosyć długo, natrafiasz wkocu do rozdroża...",
+	event: {}
 }];
 
 exports.default = scenario;
 
 /***/ }),
 /* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+   value: true
+});
+var Greetings = {
+   heading: "\n_________ _______          _________   _______  _______  _______  _______ \n\\__   __/(  ____ \\|\\     /|\\__   __/  (  ____ \\(  ___  )(       )(  ____ \\\n   ) (   | (    \\/( \\   / )   ) (     | (    \\/| (   ) || () () || (    \\/\n   | |   | (__     \\ (_) /    | |     | |      | (___) || || || || (__    \n   | |   |  __)     ) _ (     | |     | | ____ |  ___  || |(_)| ||  __)   \n   | |   | (       / ( ) \\    | |     | | \\_  )| (   ) || |   | || (      \n   | |   | (____/\\( /   \\ )   | |     | (___) || )   ( || )   ( || (____/\\\n   )_(   (_______/|/     \\|   )_(     (_______)|/     \\||/     \\|(_______/\n                                                                          \n",
+
+   description: "Witaj w prostej grze testowej, poznaj niesamowity \u015Bwiat, bla bla bla :)\nNarazie ze wzgl\u0119du na to \u017Ce jest to wersja testowa nie skupia\u0142em si\u0119 na wymyslaniu scenariuszy, to zostawiam na koniec.\nBrak jeszcze NPC, Boss\xF3w, czy mo\u017Cliwo\u015Bci jaki\u015B atak\xF3w specjalnych \u017Cu\u017Cywaj\u0105cych MP (man\u0119).\n"
+};
+
+exports.default = Greetings;
+
+/***/ }),
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1622,7 +2048,7 @@ var _consumableItems = __webpack_require__(2);
 
 var _wearableItem = __webpack_require__(3);
 
-var _expSchema = __webpack_require__(18);
+var _expSchema = __webpack_require__(19);
 
 var _expSchema2 = _interopRequireDefault(_expSchema);
 
@@ -1879,7 +2305,7 @@ var Player = function (_GameObject) {
 exports.default = Player;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
