@@ -5,9 +5,10 @@ class Location {
 	constructor(scenaryObj) {
 		this.description = scenaryObj.description,
 		this.event = scenaryObj.event.introduce || null,
-		this.orders = this.collectOrders(scenaryObj.event.options),
-		this.orderAnswer = this.collectAnswers(scenaryObj.event.options),
-		this.listOfOrders = this.textOrderList(scenaryObj.event.options),
+		this.orders = this.collectOrders(scenaryObj.event.options), // polecenia przekazywane do orderSwitch
+		this.orderAnswer = this.collectAnswers(scenaryObj.event.options), // odpowiedzi przekazywane do orderSwitch
+		this.listOfOrders = this.textOrderList(scenaryObj.event.options), // Lista polecen do wyświetlenia w konsoli przekazywane do orderSwitch
+		this.eventResolve = this.addEventResolve(scenaryObj.event.resolve),
 		this.monsterList
 	}
 	
@@ -36,6 +37,14 @@ class Location {
 			return ` [ ${obj.action} ] `;
 		});
 		return orders;
+	}
+
+	addEventResolve(resolve) {
+		if(resolve === "enemy") {
+			return new Enemy(EnemyCollector.getEnemy());
+		} else {
+			return resolve;
+		}
 	}
 	
 	spawnMonsters() {

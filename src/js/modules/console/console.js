@@ -34,19 +34,21 @@ class Console {
         this.scrollOutput();
     }
 
-    info(value) {
+    info(value, preformat=true) {
         let newParagraph = document.createElement("pre");
         newParagraph.style.color = this.infoColor;
         newParagraph.textContent = value;
         this.output.appendChild(newParagraph);
         this.scrollOutput();
+        
+        if(!preformat) newParagraph.classList.add("console__ascii-art")
     }
 
-    present(value) {
+    present(value, timeout=10) {
         let newParagraph = document.createElement("p");
         newParagraph.style.color = this.presentColor;
         this.output.appendChild(newParagraph);
-        this.typingAnimation(newParagraph, value, 0, 10);
+        this.typingAnimation(newParagraph, value, 0, timeout);
 
         return value.length * 11; // zwraca czas wykonywania dla funkcji asynchronicznej
     }
@@ -99,7 +101,13 @@ class Console {
         this.output.scrollTo(0, this.output.scrollHeight);
     }
 
+    clear() {
+        this.output.innerHTML = "";
+    }
+
     updateStats(statsObj) {
+        if(this.user === "Player") this.user = statsObj.name;
+
         const HPToShow = Math.round(statsObj.actualHP / statsObj.hp * 100);
         const MPToShow = Math.round(statsObj.actualMP / statsObj.mana * 100);
 

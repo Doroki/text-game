@@ -2,8 +2,10 @@ import Console from './modules/console/console.js'; // Klasa konsoli
 import OrderSwitch from './modules/order-switch.js';
 import Map from './modules/map/map.js';
 import scenario from './config-files/scenario.js'; // Zmienna imitująca plik JSON z danymi, które są używane do przypisania informacji, jak opisy, wydarzenie itp. w każdej z lokalizacji
+import Greetings from './config-files/greetings.js';
 import GameGrow from './config-files/game-grow.js';
 import Player from './modules/game-objects/player.js';
+import GameObject from './modules/game-objects/game-object.js';
 
 
 class Game {
@@ -11,7 +13,7 @@ class Game {
 		this.GameConsole = new Console(document.querySelector("#input"), document.querySelector("#output")),
 			this.GameMap = new Map(scenario, document.querySelector("table")),
 			this.OrderSwitch = new OrderSwitch(this),
-			this.Player = new Player({name: "Ziomek", lvl: 1, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10})
+			this.Player = new Player({name: "", lvl: 1, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10})
 	}
 
 	// ---- ASYNCHRONICZNA FUNKCJA, WYŚWIETLA POLECNIA W POPRAWNEJ KOLEJNOŚCI
@@ -65,7 +67,8 @@ class Game {
 	}
 
 	// ---- ROZPOCZĘCIE WALKI
-	startFight(Enemy) {
+	startFight(Enemy, prevOrders) {
+		let actualOrders = prevOrders || this.OrderSwitch.actualOrders;
 		this.OrderSwitch.change("fight");
 
 		this.asyncFunc(() => { // asynchronicznie prezentuje przebieg walki
@@ -74,7 +77,7 @@ class Game {
 			this.GameConsole.present(Enemy.hit(this.Player));
 			this.GameConsole.updateStats(this.Player);
 		}).then(() => {
-			setTimeout(() => this.checkFightResult(Enemy), 1500); 
+			setTimeout(() => this.checkFightResult(Enemy, actualOrders), 1500); 
 		});
 	};
 
@@ -104,6 +107,17 @@ class Game {
 	}
 
 	talkNPC() {}
+
+	// ---- ROZPOCZĘCIE SPECJALNEGO WYDARZENIA PO POLECENIU "sprawdź > wejdź"
+	participEvent() {
+		const resolve = this.GameMap.currentLocation.eventResolve;
+		if(resolve instanceof GameObject){
+			this.startFight(resolve);
+			this.GameMap.currentLocation.eventResolve = `Już odwiedziłeś tą lokalizacje, jest tu tylko martwy ${resolve}`;
+		} else {
+			this.GameConsole.present(resolve);
+		}
+	}
 
 	// ---- WYŚWIETLA EKWIPUNEK ORAZ PLECAK GRACZA
 	checkEquipment() {
@@ -179,10 +193,24 @@ class Game {
 		}
 	}
 
-	start() {
+	init(order) {
+		this.Player.name = order;
 		this.presentLocation();
-		this.GameConsole.listenPlayer(this.action.bind(this)); // Przekazuje konsoli funkcje, która ma być wywoływana przy każdym wcisnięciu "Enter"
+		this.OrderSwitch.change("default");
 		this.GameConsole.updateStats(this.Player); 
+	}
+
+	start() {
+		this.GameConsole.info(Greetings.heading, false);
+
+		this.asyncFunc(() =>
+			this.GameConsole.present(Greetings.description)
+			).then(() =>
+				this.GameConsole.info(`\n\n ABY ROZPOCZĄĆ GRĘ PODAJ SWÓJ NICK`)
+			);
+
+		this.OrderSwitch.change("gameStart");
+		this.GameConsole.listenPlayer(this.action.bind(this)); 	// Przekazuje konsoli funkcje, która ma być wywoływana przy każdym wcisnięciu "Enter"
 	}
 }
 

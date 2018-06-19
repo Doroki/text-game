@@ -101,10 +101,6 @@ var GameObject = function () {
 			var attackPower = this.attack * 2 + this.lvl;
 			var dealtDamage = GameObjectToAttack.getHit(attackPower);
 
-			if (!Number.isInteger(dealtDamage)) {
-				return this.name + ' zaatakowa\u0142 i zada\u0142 ci ' + dealtDamage + ' obra\u017Cen. ' + dealtDamage;
-			}
-
 			return this.name + ' zaatakowa\u0142 i zada\u0142 ci ' + dealtDamage + ' obra\u017Cen';
 		}
 	}, {
@@ -149,7 +145,7 @@ var GameGrow = {
 	lvl: 1,
 	statsGrow: 1 * 10,
 
-	updateStatus: function updateStatus(lvl) {
+	updateStats: function updateStats(lvl) {
 		this.lvl = lvl;
 		this.statsGrow = lvl * 10;
 	}
@@ -400,13 +396,21 @@ var _scenario = __webpack_require__(16);
 
 var _scenario2 = _interopRequireDefault(_scenario);
 
+var _greetings = __webpack_require__(17);
+
+var _greetings2 = _interopRequireDefault(_greetings);
+
 var _gameGrow = __webpack_require__(1);
 
 var _gameGrow2 = _interopRequireDefault(_gameGrow);
 
-var _player = __webpack_require__(17);
+var _player = __webpack_require__(18);
 
 var _player2 = _interopRequireDefault(_player);
+
+var _gameObject = __webpack_require__(0);
+
+var _gameObject2 = _interopRequireDefault(_gameObject);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -416,7 +420,7 @@ var Game = function () {
 	function Game() {
 		_classCallCheck(this, Game);
 
-		this.GameConsole = new _console2.default(document.querySelector("#input"), document.querySelector("#output")), this.GameMap = new _map2.default(_scenario2.default, document.querySelector("table")), this.OrderSwitch = new _orderSwitch2.default(this), this.Player = new _player2.default({ name: "Ziomek", lvl: 1, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10 });
+		this.GameConsole = new _console2.default(document.querySelector("#input"), document.querySelector("#output")), this.GameMap = new _map2.default(_scenario2.default, document.querySelector("table")), this.OrderSwitch = new _orderSwitch2.default(this), this.Player = new _player2.default({ name: "", lvl: 1, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10 });
 	}
 
 	// ---- ASYNCHRONICZNA FUNKCJA, WYŚWIETLA POLECNIA W POPRAWNEJ KOLEJNOŚCI
@@ -479,9 +483,10 @@ var Game = function () {
 
 	}, {
 		key: 'startFight',
-		value: function startFight(Enemy) {
+		value: function startFight(Enemy, prevOrders) {
 			var _this = this;
 
+			var actualOrders = prevOrders || this.OrderSwitch.actualOrders;
 			this.OrderSwitch.change("fight");
 
 			this.asyncFunc(function () {
@@ -492,7 +497,7 @@ var Game = function () {
 				_this.GameConsole.updateStats(_this.Player);
 			}).then(function () {
 				setTimeout(function () {
-					return _this.checkFightResult(Enemy);
+					return _this.checkFightResult(Enemy, actualOrders);
 				}, 1500);
 			});
 		}
@@ -531,6 +536,20 @@ var Game = function () {
 	}, {
 		key: 'talkNPC',
 		value: function talkNPC() {}
+
+		// ---- ROZPOCZĘCIE SPECJALNEGO WYDARZENIA PO POLECENIU "sprawdź > wejdź"
+
+	}, {
+		key: 'participEvent',
+		value: function participEvent() {
+			var resolve = this.GameMap.currentLocation.eventResolve;
+			if (resolve instanceof _gameObject2.default) {
+				this.startFight(resolve);
+				this.GameMap.currentLocation.eventResolve = 'Ju\u017C odwiedzi\u0142e\u015B t\u0105 lokalizacje, jest tu tylko martwy ' + resolve;
+			} else {
+				this.GameConsole.present(resolve);
+			}
+		}
 
 		// ---- WYŚWIETLA EKWIPUNEK ORAZ PLECAK GRACZA
 
@@ -627,11 +646,28 @@ var Game = function () {
 			}
 		}
 	}, {
+		key: 'init',
+		value: function init(order) {
+			this.Player.name = order;
+			this.presentLocation();
+			this.OrderSwitch.change("default");
+			this.GameConsole.updateStats(this.Player);
+		}
+	}, {
 		key: 'start',
 		value: function start() {
-			this.presentLocation();
+			var _this4 = this;
+
+			this.GameConsole.info(_greetings2.default.heading, false);
+
+			this.asyncFunc(function () {
+				return _this4.GameConsole.present(_greetings2.default.description);
+			}).then(function () {
+				return _this4.GameConsole.info('\n\n ABY ROZPOCZ\u0104\u0106 GR\u0118 PODAJ SW\xD3J NICK');
+			});
+
+			this.OrderSwitch.change("gameStart");
 			this.GameConsole.listenPlayer(this.action.bind(this)); // Przekazuje konsoli funkcje, która ma być wywoływana przy każdym wcisnięciu "Enter"
-			this.GameConsole.updateStats(this.Player);
 		}
 	}]);
 
@@ -701,19 +737,25 @@ var Console = function () {
     }, {
         key: "info",
         value: function info(value) {
+            var preformat = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
             var newParagraph = document.createElement("pre");
             newParagraph.style.color = this.infoColor;
             newParagraph.textContent = value;
             this.output.appendChild(newParagraph);
             this.scrollOutput();
+
+            if (!preformat) newParagraph.classList.add("console__ascii-art");
         }
     }, {
         key: "present",
         value: function present(value) {
+            var timeout = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 10;
+
             var newParagraph = document.createElement("p");
             newParagraph.style.color = this.presentColor;
             this.output.appendChild(newParagraph);
-            this.typingAnimation(newParagraph, value, 0, 10);
+            this.typingAnimation(newParagraph, value, 0, timeout);
 
             return value.length * 11; // zwraca czas wykonywania dla funkcji asynchronicznej
         }
@@ -775,8 +817,15 @@ var Console = function () {
             this.output.scrollTo(0, this.output.scrollHeight);
         }
     }, {
+        key: "clear",
+        value: function clear() {
+            this.output.innerHTML = "";
+        }
+    }, {
         key: "updateStats",
         value: function updateStats(statsObj) {
+            if (this.user === "Player") this.user = statsObj.name;
+
             var HPToShow = Math.round(statsObj.actualHP / statsObj.hp * 100);
             var MPToShow = Math.round(statsObj.actualMP / statsObj.mana * 100);
 
@@ -943,6 +992,8 @@ var OrderSwitch = function () {
                     break;
                 case this.specialOrders[0] || null:
                     this.parent.GameConsole.present(this.specialAnswers[0]);
+                    this.specialAnswers[0] = null;
+                    this.parent.participEvent();
                     break;
                 case this.specialOrders[1] || null:
                     this.parent.GameConsole.present(this.specialAnswers[1]);
@@ -989,6 +1040,27 @@ var OrderSwitch = function () {
                 default:
                     this.parent.GameConsole.error("Nie ma takiego polecenia");
                     break;
+            }
+        }
+    }, {
+        key: "gameStart",
+        value: function gameStart(order) {
+            var _this = this;
+
+            var regex = new RegExp("[A-Za-ząęśćźżłóń]*", "g");
+            var nickIsValid = regex.test(order);
+
+            if (nickIsValid) {
+                this.parent.GameConsole.present("Prygotuj się... Rozmoczynamy :)");
+                this.parent.GameConsole.info("\n\n----------------------");
+                this.parent.GameConsole.present("||||||||||||||||||||||", 120);
+                this.parent.GameConsole.info("----------------------");
+                setTimeout(function () {
+                    _this.parent.GameConsole.clear();
+                    _this.parent.init(order);
+                }, 3000);
+            } else {
+                this.parent.GameConsole.error("Nick może składać się tylko z 1 wyrazu i może zawierać jedynie litery");
             }
         }
     }]);
@@ -1203,7 +1275,10 @@ var Location = function () {
 	function Location(scenaryObj) {
 		_classCallCheck(this, Location);
 
-		this.description = scenaryObj.description, this.event = scenaryObj.event.introduce || null, this.orders = this.collectOrders(scenaryObj.event.options), this.orderAnswer = this.collectAnswers(scenaryObj.event.options), this.listOfOrders = this.textOrderList(scenaryObj.event.options), this.monsterList;
+		this.description = scenaryObj.description, this.event = scenaryObj.event.introduce || null, this.orders = this.collectOrders(scenaryObj.event.options), // polecenia przekazywane do orderSwitch
+		this.orderAnswer = this.collectAnswers(scenaryObj.event.options), // odpowiedzi przekazywane do orderSwitch
+		this.listOfOrders = this.textOrderList(scenaryObj.event.options), // Lista polecen do wyświetlenia w konsoli przekazywane do orderSwitch
+		this.eventResolve = this.addEventResolve(scenaryObj.event.resolve), this.monsterList;
 	}
 
 	_createClass(Location, [{
@@ -1235,6 +1310,15 @@ var Location = function () {
 				return ' [ ' + obj.action + ' ] ';
 			});
 			return orders;
+		}
+	}, {
+		key: 'addEventResolve',
+		value: function addEventResolve(resolve) {
+			if (resolve === "enemy") {
+				return new _enemy2.default(_enemyCollector2.default.getEnemy());
+			} else {
+				return resolve;
+			}
 		}
 	}, {
 		key: 'spawnMonsters',
@@ -1554,11 +1638,12 @@ var scenario = [{
 		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było. Ze środka jednak ciągle dobiga dziwny hałas...",
 		options: [{
 			action: "wejdź",
-			answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 		}, {
 			action: "odejdź",
-			answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
-		}]
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
 	}
 }, {
 	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża oraz starej chaty połozonej nieopodal",
@@ -1569,11 +1654,12 @@ var scenario = [{
 		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było. Ze środka jednak ciągle dobiga dziwny hałas...",
 		options: [{
 			action: "wejdź",
-			answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 		}, {
 			action: "odejdź",
-			answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
-		}]
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
 	}
 }, {
 	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża oraz starej chaty połozonej nieopodal",
@@ -1581,11 +1667,12 @@ var scenario = [{
 		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było. Ze środka jednak ciągle dobiga dziwny hałas...",
 		options: [{
 			action: "wejdź",
-			answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 		}, {
 			action: "odejdź",
-			answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
-		}]
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
 	}
 }, {
 	description: "Idąc dosyć długo, natrafiasz wkocu do rozdroża oraz starej chaty połozonej nieopodal",
@@ -1593,11 +1680,12 @@ var scenario = [{
 		introduce: "Chata wydaje się być opuszczona, wygląda na zaniedbaną a porośnięte otoczenie sugeruje że już dawno tu nikogo nie było. Ze środka jednak ciągle dobiga dziwny hałas...",
 		options: [{
 			action: "wejdź",
-			answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+			answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 		}, {
 			action: "odejdź",
-			answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
-		}]
+			answer: "Wracasz na rozdroże"
+		}],
+		resolve: "enemy"
 	}
 }];
 
@@ -1605,6 +1693,24 @@ exports.default = scenario;
 
 /***/ }),
 /* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+   value: true
+});
+var Greetings = {
+   heading: "\n_________ _______          _________   _______  _______  _______  _______ \n\\__   __/(  ____ \\|\\     /|\\__   __/  (  ____ \\(  ___  )(       )(  ____ \\\n   ) (   | (    \\/( \\   / )   ) (     | (    \\/| (   ) || () () || (    \\/\n   | |   | (__     \\ (_) /    | |     | |      | (___) || || || || (__    \n   | |   |  __)     ) _ (     | |     | | ____ |  ___  || |(_)| ||  __)   \n   | |   | (       / ( ) \\    | |     | | \\_  )| (   ) || |   | || (      \n   | |   | (____/\\( /   \\ )   | |     | (___) || )   ( || )   ( || (____/\\\n   )_(   (_______/|/     \\|   )_(     (_______)|/     \\||/     \\|(_______/\n                                                                          \n",
+
+   description: "Witaj w prostej grze testowej, poznaj niesamowity \u015Bwiat, bla bla bla :)\nNarazie ze wzgl\u0119du na to \u017Ce jest to wersja testowa nie skupia\u0142em si\u0119 na wymyslaniu scenariuszy, to zostawiam na koniec.\n"
+};
+
+exports.default = Greetings;
+
+/***/ }),
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1626,7 +1732,7 @@ var _consumableItems = __webpack_require__(2);
 
 var _wearableItem = __webpack_require__(3);
 
-var _expSchema = __webpack_require__(18);
+var _expSchema = __webpack_require__(19);
 
 var _expSchema2 = _interopRequireDefault(_expSchema);
 
@@ -1736,7 +1842,7 @@ var Player = function (_GameObject) {
 
 				return 'U\u017Cy\u0142e\u015B ' + itemToUse[0].name;
 			} else {
-				return 'Nie znaleziono takiego przedmiotu w plecaku, upewnij si\u0119 \u017Ce poprawnie wpisa\u0142e\u015B nazw\u0119';
+				return 'Nie znaleziono takiego przedmiotu w plecaku...';
 			}
 		}
 	}, {
@@ -1799,7 +1905,7 @@ var Player = function (_GameObject) {
 
 				return 'zamieni\u0142e\u015B ' + itemToChange[0].name + ' na ' + itemToPutOn[0].name;
 			} else {
-				return 'Nie znaleziono takiego przedmiotu w plecaku, upewnij si\u0119 \u017Ce poprawnie wpisa\u0142e\u015B nazw\u0119';
+				return 'Nie znaleziono takiego przedmiotu w plecaku...';
 			}
 		}
 	}, {
@@ -1812,7 +1918,12 @@ var Player = function (_GameObject) {
 
 				arrOfItems.forEach(function (item) {
 					_this5.backpack.push(item);
-					dropItemList += item.name + ' ';
+
+					if (dropItemList.indexOf(item.name) > 0) return; // sprawdza czy nazwa przedmiotu już się pojawiła na liście
+					var itemsCount = arrOfItems.filter(function (i) {
+						return i.name === item.name;
+					}).length;
+					dropItemList += itemsCount > 1 ? ' ' + item.name + 'x' + itemsCount + ' ' : ' ' + item.name + ' ';
 				});
 
 				return dropItemList;
@@ -1867,7 +1978,7 @@ var Player = function (_GameObject) {
 			} else if (foundConsumable.length > 0) {
 				return foundConsumable[0].showStats();
 			} else {
-				return 'Nie znaleziono takiego przedmiotu, upewnij si\u0119 \u017Ce poprawnie wpisa\u0142e\u015B nazw\u0119';
+				return 'Nie znaleziono takiego przedmiotu...';
 			}
 		}
 	}]);
@@ -1878,7 +1989,7 @@ var Player = function (_GameObject) {
 exports.default = Player;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

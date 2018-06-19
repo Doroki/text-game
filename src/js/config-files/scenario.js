@@ -7,13 +7,14 @@ const scenario = [
 			options: [
 				{
 					action: "wejdź",
-					answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+					answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 				},
 				{
 					action: "odejdź",
-					answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
+					answer: "Wracasz na rozdroże"
 				}
-			]
+			],
+			resolve: "enemy"
 		}
 	},
 	
@@ -30,13 +31,14 @@ const scenario = [
 			options: [
 				{
 					action: "wejdź",
-					answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+					answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 				},
 				{
 					action: "odejdź",
-					answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
+					answer: "Wracasz na rozdroże"
 				}
-			]
+			],
+			resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
 		}
 	},
 	{
@@ -46,13 +48,14 @@ const scenario = [
 			options: [
 				{
 					action: "wejdź",
-					answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+					answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 				},
 				{
 					action: "odejdź",
-					answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
+					answer: "Wracasz na rozdroże"
 				}
-			]
+			],
+			resolve: "Po rozejrzeniu się, wygląda na to że niestety nic ciekawego tu nie znajdziesz..."
 		}
 	},
 	{
@@ -62,13 +65,14 @@ const scenario = [
 			options: [
 				{
 					action: "wejdź",
-					answer: "Wchodząc zwracasz na siebie uwagę, szukającego tam jedzenia "
+					answer: "Dom wygląda na dawno opuszczony, pełno kurzu i pajęczyn"
 				},
 				{
 					action: "odejdź",
-					answer: "Może rzeczywiście lepiej się nie narażać, kto wie co tam się kryje..."
+					answer: "Wracasz na rozdroże"
 				}
-			]
+			],
+			resolve: "enemy"
 		}
 	}
 	
