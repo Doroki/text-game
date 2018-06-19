@@ -68,9 +68,7 @@ class OrderSwitch {
                 this.parent.useItem("użyj Jedzenie");
                 break;
             case this.specialOrders[0] || null:
-                this.parent.GameConsole.present(this.specialAnswers[0])
-                this.specialAnswers[0] = null;
-                this.parent.participEvent();
+                this.parent.participEvent(this.specialAnswers[0]);
                 break;
             case this.specialOrders[1] || null:
                 this.parent.GameConsole.present(this.specialAnswers[1]);

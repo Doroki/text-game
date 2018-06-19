@@ -13,6 +13,7 @@ _________ _______          _________   _______  _______  _______  _______
 
 description: `Witaj w prostej grze testowej, poznaj niesamowity świat, bla bla bla :)
 Narazie ze względu na to że jest to wersja testowa nie skupiałem się na wymyslaniu scenariuszy, to zostawiam na koniec.
+Brak jeszcze NPC, Bossów, czy możliwości jakiś ataków specjalnych żużywających MP (manę).
 `
 }
 

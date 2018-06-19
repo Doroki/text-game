@@ -13,7 +13,7 @@ class Game {
 		this.GameConsole = new Console(document.querySelector("#input"), document.querySelector("#output")),
 			this.GameMap = new Map(scenario, document.querySelector("table")),
 			this.OrderSwitch = new OrderSwitch(this),
-			this.Player = new Player({name: "", lvl: 1, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10})
+			this.Player = new Player({name: "", lvl: 0, exp: 0, hp: 100, mana: 50, attack: 10, defence: 10})
 	}
 
 	// ---- ASYNCHRONICZNA FUNKCJA, WYŚWIETLA POLECNIA W POPRAWNEJ KOLEJNOŚCI
@@ -67,8 +67,7 @@ class Game {
 	}
 
 	// ---- ROZPOCZĘCIE WALKI
-	startFight(Enemy, prevOrders) {
-		let actualOrders = prevOrders || this.OrderSwitch.actualOrders;
+	startFight(Enemy, prevOrders="default") { // prevOrders zmiana zestawu polecen na te sprzed walki
 		this.OrderSwitch.change("fight");
 
 		this.asyncFunc(() => { // asynchronicznie prezentuje przebieg walki
@@ -77,45 +76,56 @@ class Game {
 			this.GameConsole.present(Enemy.hit(this.Player));
 			this.GameConsole.updateStats(this.Player);
 		}).then(() => {
-			setTimeout(() => this.checkFightResult(Enemy, actualOrders), 1500); 
+			setTimeout(() => this.checkFightResult(Enemy, prevOrders), 1500); 
 		});
 	};
 
 	// ---- SPRAWDZA PRZEBIEG WALKI, URUCHAMIA KOLEJNĄ JEJ ITERACJE LUB KONCZY W PRZYPADKU BRAKU HP KTÓREJŚ ZE STRON
-	checkFightResult(Enemy) {
+	checkFightResult(Enemy, prevOrders) {
 		if (this.Player.actualHP <= 0) { // Przegrana Gracza
 			this.Player.lostFight();
 			this.GameConsole.updateStats(this.Player);
 			this.GameConsole.error(`Niestety przegrałeś walkę, tracisz 20% expa`);
-			this.OrderSwitch.change("default");
+			this.OrderSwitch.change(prevOrders);
 		} else if (Enemy.actualHP > 0) { // Dalszy ciąg walki
-			this.startFight(Enemy);
+			this.startFight(Enemy, prevOrders);
 		} else { // Wygrana Gracza
 			const lvlMsg = this.Player.gainExp(Enemy.exp);
 			if (lvlMsg) { // Awans na następny LvL
 				this.GameConsole.info(lvlMsg);
 				this.GameConsole.updateStats(this.Player);
 				GameGrow.updateStats(this.Player.lvl);
+				if(this.Player.lvl === 100) this.endGame();
 			}
 
 			this.GameConsole.info(`${Enemy.name} został pokonany!`);
 			const dropItemList = this.Player.collectItem(Enemy.itemDrop); // zbiera przedmioty po pokonanym przeciwniku
 			this.GameConsole.info("Zdobyłeś: " + dropItemList);
 			this.GameMap.deleteEnemy(Enemy); // usuwa pokonanego przeciwnika
-			this.OrderSwitch.change("default");
+			this.OrderSwitch.change(prevOrders);
 		}
 	}
 
 	talkNPC() {}
 
 	// ---- ROZPOCZĘCIE SPECJALNEGO WYDARZENIA PO POLECENIU "sprawdź > wejdź"
-	participEvent() {
-		const resolve = this.GameMap.currentLocation.eventResolve;
-		if(resolve instanceof GameObject){
-			this.startFight(resolve);
-			this.GameMap.currentLocation.eventResolve = `Już odwiedziłeś tą lokalizacje, jest tu tylko martwy ${resolve}`;
+	participEvent(description) {
+		const eventResolve = this.GameMap.currentLocation.eventResolve;
+		
+		if(eventResolve.actualHP <= 0) {
+			this.asyncFunc(() => this.GameConsole.present(description))
+			.then(() => {
+				this.GameConsole.present(`Jednak, już odwiedziłeś tą lokalizacje, jest tu tylko martwy, zabity przez ciebie ${eventResolve.name}`)
+			});
+		} else if(eventResolve instanceof GameObject){
+			this.asyncFunc(() => this.GameConsole.present(description))
+			.then(() => {
+				this.GameConsole.warning(`Po wejśćiu nieoczekiwanie atakuje Cię ${eventResolve.name}`)
+				this.startFight(eventResolve, "special");
+			});
 		} else {
-			this.GameConsole.present(resolve);
+			this.asyncFunc(() => this.GameConsole.present(description))
+			.then(() => this.GameConsole.present(eventResolve));
 		}
 	}
 
@@ -191,6 +201,10 @@ class Game {
 		} else {
 			this.GameConsole.info(`Niestety nie ma tam żadnego przejscia`);
 		}
+	}
+
+	endGame() {
+		// Koniec gry
 	}
 
 	init(order) {

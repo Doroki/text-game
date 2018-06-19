@@ -15,7 +15,8 @@ class GameObject {
 	}
 	
 	hit(GameObjectToAttack) {
-		const attackPower = this.attack * 2 + this.lvl;
+		const attack = this.attack * 2 + this.lvl;
+		const attackPower = Math.round(attack - (attack * (1 / ((Math.round(Math.random()*10) + 1)))));
 		const dealtDamage = GameObjectToAttack.getHit(attackPower);
 
 		return `${this.name} zaatakował i zadał ci ${dealtDamage} obrażen`;	

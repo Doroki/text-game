@@ -33,7 +33,7 @@ const ListOfEnemies = [
 		exp: 40,
 		hp: 80,
 		mana: null,
-		attack: 15,
+		attack: 12,
 		defence: 5
     },
     {
@@ -42,7 +42,7 @@ const ListOfEnemies = [
 		exp: 50,
 		hp: 90,
 		mana: null,
-		attack: 17,
+		attack: 14,
 		defence: 8
     },
     {
@@ -51,7 +51,7 @@ const ListOfEnemies = [
 		exp: 56,
 		hp: 100,
 		mana: null,
-		attack: 20,
+		attack: 16,
 		defence: 10
 	}
 ];
